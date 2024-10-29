@@ -1,0 +1,32 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.AIPersonas" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="fontFamily">@font/roboto_regular</item>
+
+    </style>
+
+    <style name="Theme.AIPersonas" parent="Base.Theme.AIPersonas" />
+
+    <style name="HeaderTextStyle">
+        <item name="android:fontFamily">roboto_bold</item>
+        <item name="android:textSize">24sp</item>
+
+    </style>
+
+    <!-- Body Text Style (e.g., Chat Messages) (Following Ana's Sketch) -->
+    <style name="BodyTextStyle">
+        <item name="android:fontFamily">@font/roboto_regular</item>
+        <item name="android:textSize">16sp</item>
+
+    </style>
+
+    <!-- Button Text Style -->
+    <style name="ButtonTextStyle">
+        <item name="android:fontFamily">@font/roboto_bold</item>
+        <item name="android:textSize">18sp</item>
+
+    </style>
+
+</resources>
