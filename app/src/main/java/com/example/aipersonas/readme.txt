@@ -133,8 +133,8 @@ Keeping Room Updated:
 We updated the database version to reflect the new schema changes. It took a bit of digging, but now Room and Firestore are on the same page.
 Adapter Problems:
 We fixed an issue where our PersonaAdapter wasn’t attaching to the RecyclerView properly. Now, the list of personas displays as it should.
-3. Long-Click Features for Personas
 
+3. Long-Click Features for Personas
 We added long-click actions for persona cards:
 Delete Persona:
 We can now delete a persona from both Room and Firestore at the same time.
