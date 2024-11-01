@@ -2,6 +2,23 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
+    <color name="primaryBackground">#E6F0FF</color>
+    <color name="primaryText">#1F3D7A</color>
+    <color name="editButton">#A8C4FF</color>
+    <color name="saveButton">#C7E3C3</color>
+    <color name="cancelButton">#F7C8C8</color>
+    <color name="buttonText">#000000</color>
+    <color name="statusTag">#81C784</color>
+    <color name="inputBorder">#A0A0A0</color>
+
+
+    <!--  Additional colors for new layout  -->
+    <color name="backgroundColor">#E6F0FF</color>
+    <color name="headerTextColor">#1F3D7A</color>
+    <color name="inputBackgroundColor">#A0A0A0</color>
+    <color name="buttonTextColor">#000000</color>
+    <color name="linkTextColor">#1F3D7A</color>
+
     <!-- Primary colors -->
     <color name="primary_color">#016180</color>
     <color name="primary_dark">#4680AB</color>
@@ -33,5 +50,7 @@
     <color name="accent_dark_light_60">#8C6955</color> <!-- 60% opacity -->
     <color name="accent_dark_light_40">#AD8A74</color> <!-- 40% opacity -->
     <color name="accent_dark_light_20">#CDAA93</color> <!-- 20% opacity -->
+
+
 
 </resources>

@@ -13,13 +13,13 @@ import java.util.List;
 
 public class PersonaViewModel extends AndroidViewModel {
 
-    private PersonaRepository personaRepository;
+    private PersonaRepository repository;
     private LiveData<List<Persona>> allPersonas;
 
     public PersonaViewModel(@NonNull Application application) {
         super(application);
-        personaRepository = new PersonaRepository(application);
-        allPersonas = personaRepository.getAllPersonas();
+        repository = new PersonaRepository(application);
+        allPersonas = repository.getAllPersonas();
     }
 
     public LiveData<List<Persona>> getAllPersonas() {
@@ -27,8 +27,14 @@ public class PersonaViewModel extends AndroidViewModel {
     }
 
     public void insert(Persona persona) {
-        personaRepository.insert(persona);
+        repository.insert(persona);
     }
 
-    // Similarly, you can add update and delete methods if required.
+    public void update(Persona persona) {
+        repository.update(persona);
+    }
+
+    public void delete(Persona persona) {
+        repository.delete(persona);
+    }
 }

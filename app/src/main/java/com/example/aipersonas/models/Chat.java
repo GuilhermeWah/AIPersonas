@@ -8,13 +8,14 @@ public class Chat {
 
     @PrimaryKey(autoGenerate = true)
     private int chatId;
-    private int personaId; // Foreign key to link to a Persona
+    private String userId; // Foreign key to link to a User
+    private String personaId; // Foreign key to link to a Persona
     private String personaTitle; // Optional field to store the name of the associated persona;
     private String lastMessage;
-    private String timestamp;
+    private long timestamp;
 
     // Constructor
-    public Chat(int personaId, String personaTitle, String lastMessage, String timestamp) {
+    public Chat(String userId,String personaId, String personaTitle, String lastMessage, long timestamp) {
         this.personaId = personaId;
         this.personaTitle = personaTitle;
         this.lastMessage = lastMessage;
@@ -29,8 +30,22 @@ public class Chat {
     public void setChatId(int chatId) {
         this.chatId = chatId;
     }
+    public void setLastMessage (String lastMessage){
+        this.lastMessage = lastMessage;
+    }
 
-    public int getPersonaId() {
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public void setPersonaId(String personaId){
+        this.personaId = personaId;
+    }
+    public void setPersonaTitle(String personaTitle) {
+        this.personaTitle = personaTitle;
+    }
+
+    public String getPersonaId() {
         return personaId;
     }
     public String getPersonaTitle(){
@@ -41,7 +56,7 @@ public class Chat {
         return lastMessage;
     }
 
-    public String getTimestamp() {
+    public long getTimestamp() {
         return timestamp;
     }
 }

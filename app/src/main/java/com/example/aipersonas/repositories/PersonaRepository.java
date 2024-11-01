@@ -1,90 +1,145 @@
 package com.example.aipersonas.repositories;
 
+import com.example.aipersonas.utils.NetworkUtils;
 import android.app.Application;
-import android.os.AsyncTask;
 
 import androidx.lifecycle.LiveData;
 
 import com.example.aipersonas.databases.ChatDatabase;
 import com.example.aipersonas.databases.PersonaDAO;
 import com.example.aipersonas.models.Persona;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class PersonaRepository {
 
     private PersonaDAO personaDAO;
     private LiveData<List<Persona>> allPersonas;
+    private FirebaseFirestore firebaseFirestore;
+    private String userId;
+
+    // Executor for async database tasks
+    private ExecutorService executor;
 
     // Constructor
     public PersonaRepository(Application application) {
+        // Initialize Room database
         ChatDatabase database = ChatDatabase.getInstance(application);
         personaDAO = database.personaDao();
         allPersonas = personaDAO.getAllPersonas();
+
+        // Initialize Firebase Firestore
+        firebaseFirestore = FirebaseFirestore.getInstance();
+
+        // Get the authenticated user ID
+        userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
+        // Initialize executor
+        executor = Executors.newSingleThreadExecutor();
+
+        // Fetch data from Firestore if online
+        if (NetworkUtils.isNetworkAvailable(application.getApplicationContext())) {
+            fetchPersonasFromFirestore();
+        }
     }
 
-    // Method to return all Personas
-    public LiveData<List<Persona>> getAllPersonas() {
-        return allPersonas;
-    }
+// Fetch personas from Firestore and cache them in Room
+private void fetchPersonasFromFirestore() {
+
+    firebaseFirestore.collection("Users")
+            .document(userId)
+            .collection("Personas")
+            .get()
+            .addOnSuccessListener(queryDocumentSnapshots -> {
+                executor.execute(() -> {
+                    // Clear old data to avoid duplication
+                    personaDAO.deleteAll();
+
+                    // Insert fetched data into Room
+                    for (DocumentSnapshot document : queryDocumentSnapshots) {
+                        Persona persona = document.toObject(Persona.class);
+                        personaDAO.insert(persona);
+                    }
+                });
+            })
+            .addOnFailureListener(e -> {
+                // Log error if data fetching fails
+                e.printStackTrace();
+            });
+}
+
+// Method to return all Personas (from Room database)
+public LiveData<List<Persona>> getAllPersonas() {
+    return allPersonas; // Data is sourced from Room, which acts as the local cache
+}
+
+
 
     // Method to insert a Persona
     public void insert(Persona persona) {
-        new InsertPersonaAsyncTask(personaDAO).execute(persona);
+        // Insert to Room Database asynchronously
+        executor.execute(() -> {
+            personaDAO.insert(persona);
+            // Insert to Firestore
+            firebaseFirestore.collection("Users")
+                    .document(userId)
+                    .collection("Personas")
+                    .document(String.valueOf(persona.getPersonaId()))
+                    .set(persona)
+                    .addOnSuccessListener(aVoid -> {
+                        // Successfully added to Firestore
+                    })
+                    .addOnFailureListener(e -> {
+                        // Log error
+                        e.printStackTrace();
+                    });
+        });
     }
 
     // Method to update a Persona
     public void update(Persona persona) {
-        new UpdatePersonaAsyncTask(personaDAO).execute(persona);
+        // Update Room Database asynchronously
+        executor.execute(() -> {
+            personaDAO.update(persona);
+            // Update Firestore
+            firebaseFirestore.collection("Users")
+                    .document(userId)
+                    .collection("Personas")
+                    .document(String.valueOf(persona.getPersonaId()))
+                    .set(persona)
+                    .addOnSuccessListener(aVoid -> {
+                        // Successfully updated in Firestore
+                    })
+                    .addOnFailureListener(e -> {
+                        // Log error
+                        e.printStackTrace();
+                    });
+        });
     }
 
     // Method to delete a Persona
     public void delete(Persona persona) {
-        new DeletePersonaAsyncTask(personaDAO).execute(persona);
-    }
-
-    // Asynchronous task for inserting a persona
-    private static class InsertPersonaAsyncTask extends AsyncTask<Persona, Void, Void> {
-        private PersonaDAO personaDAO;
-
-        private InsertPersonaAsyncTask(PersonaDAO personaDAO) {
-            this.personaDAO = personaDAO;
-        }
-
-        @Override
-        protected Void doInBackground(Persona... personas) {
-            personaDAO.insert(personas[0]);
-            return null;
-        }
-    }
-
-    // Asynchronous task for updating a persona
-    private static class UpdatePersonaAsyncTask extends AsyncTask<Persona, Void, Void> {
-        private PersonaDAO personaDAO;
-
-        private UpdatePersonaAsyncTask(PersonaDAO personaDAO) {
-            this.personaDAO = personaDAO;
-        }
-
-        @Override
-        protected Void doInBackground(Persona... personas) {
-            personaDAO.update(personas[0]);
-            return null;
-        }
-    }
-
-    // Asynchronous task for deleting a persona
-    private static class DeletePersonaAsyncTask extends AsyncTask<Persona, Void, Void> {
-        private PersonaDAO personaDAO;
-
-        private DeletePersonaAsyncTask(PersonaDAO personaDAO) {
-            this.personaDAO = personaDAO;
-        }
-
-        @Override
-        protected Void doInBackground(Persona... personas) {
-            personaDAO.delete(personas[0]);
-            return null;
-        }
+        // Delete from Room Database asynchronously
+        executor.execute(() -> {
+            personaDAO.delete(persona);
+            // Delete from Firestore
+            firebaseFirestore.collection("Users")
+                    .document(userId)
+                    .collection("Personas")
+                    .document(String.valueOf(persona.getPersonaId()))
+                    .delete()
+                    .addOnSuccessListener(aVoid -> {
+                        // Successfully deleted from Firestore
+                    })
+                    .addOnFailureListener(e -> {
+                        // Log error
+                        e.printStackTrace();
+                    });
+        });
     }
 }

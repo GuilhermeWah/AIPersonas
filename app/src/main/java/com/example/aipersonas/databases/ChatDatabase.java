@@ -9,7 +9,7 @@ import androidx.room.RoomDatabase;
 import com.example.aipersonas.models.Chat;
 import com.example.aipersonas.models.Persona;
 
-@Database(entities = {Persona.class, Chat.class}, version = 1, exportSchema = false)
+@Database(entities = {Persona.class, Chat.class}, version = 4, exportSchema = false)
 public abstract class ChatDatabase extends RoomDatabase {
 
     private static ChatDatabase instance;

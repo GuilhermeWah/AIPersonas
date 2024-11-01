@@ -24,7 +24,7 @@ public interface ChatDAO {
     @Delete
     void delete(Chat chat);
 
-    @Query("SELECT * FROM chat_table WHERE personaId = :personaId ORDER BY timestamp ASC")
+    @Query("SELECT * FROM chat_table WHERE userId = :userId ORDER BY timestamp DESC")
     LiveData<List<Chat>> getChatsForPersona(int personaId);
 
     @Query("SELECT * FROM chat_table")

@@ -1,4 +1,4 @@
-package com.example.aipersonas.models;
+package com.example.aipersonas.viewmodels;
 
 import android.app.Application;
 

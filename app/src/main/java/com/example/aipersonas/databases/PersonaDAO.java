@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
@@ -14,7 +15,9 @@ import java.util.List;
 @Dao
 public interface PersonaDAO {
 
-    @Insert
+    //stack overflow on conflict strategy:
+    //https://stackoverflow.com/questions/56231855/room-database-onconflict-onconflictstrategy-replace-not-working
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     void insert(Persona persona);
 
     @Update
@@ -22,6 +25,9 @@ public interface PersonaDAO {
 
     @Delete
     void delete(Persona persona);
+
+    @Query("DELETE FROM persona_table")
+    void deleteAll();
 
 
     // is used to hold and observe all the personas in the Room database.

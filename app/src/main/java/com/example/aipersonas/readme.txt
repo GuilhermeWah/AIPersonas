@@ -56,7 +56,59 @@ The project is built with an MVVM (Model-View-ViewModel) architecture to enhance
 - **Search Chat Feature**: Implement a search functionality for existing chats.
 - **GTP API Integration**: Connect with OpenAI GPT to provide meaningful responses by personas during chat sessions.
 - **Favorite/Delete Persona Feature**: Complete the implementation for long press actions on persona cards to favorite or delete.
--
+
+
+
+#Architecture Database :
+
+Users (Collection)
+└── UserID (Document - based on uid)
+    ├── Personas (Sub-Collection)
+    │    ├── PersonaID_1 (Document)
+    │    └── PersonaID_2 (Document)
+    └── Chats (Sub-Collection)
+         ├── ChatID_1 (Document)
+         └── ChatID_2 (Document)
+
+
+ Dataflow idea:
+
+ Suggested Adjustments for Better Integration:
+ Repository Adjustments:
+
+ Fetch Data Based on User ID:
+ Modify all repository classes (PersonaRepository, ChatRepository)
+ to use Firebase Firestore with user-specific queries using the uid.
+ Save Data Based on User ID: When adding new personas or chats,
+ make sure they are stored under the current user’s document in Firestore.
+ ViewModel Updates:
+
+ User Scope Awareness: Update PersonaViewModel and ChatViewModel so that they are
+  aware of the current user context.
+  The ViewModel should receive the uid as a
+  parameter or retrieve it using a shared mechanism
+  (e.g., from FirebaseAuth.getInstance().getCurrentUser().getUid()).
+ Room Database:
+
+ Update Tables to Include uid: Modify the Room tables (Persona, Chat) to include a userId field
+  so that local    caching respects different users.
+ Filter Data by User: Ensure that local queries are filtered by userId so that only the
+ authenticated user’s data is visible.
+
+ Example Workflow with Firebase Authentication
+ User Signs In:
+ When the user signs in using Firebase Authentication, we retrieve their uid.
+ Data Flow with uid:
+
+ The uid is passed to the Repository, which will handle the data access.
+ Firestore: When accessing Firestore, the uid is used to retrieve data belonging to
+ that specific user.
+ Room Database: The local Room database should only cache data for the specific uid.
+ Queries are filtered to display data related to the logged-in user.
+
+ Persona and Chat Isolation:
+ Each user’s personas and chats are isolated from one another,
+ ensuring privacy and a seamless user experience.
 
 ## Contributors
 - Guilherme Miranda Falcão (Lead Developer & Project Manager)

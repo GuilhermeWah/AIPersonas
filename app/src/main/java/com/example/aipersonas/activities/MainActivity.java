@@ -37,16 +37,17 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
         createNewChatButton = findViewById(R.id.createNewChatButton);
         searchChatButton = findViewById(R.id.searchChatButton);
 
-        //just for test purposes
-        List<Persona> dummyPersonas = createDummyPersonas();
-
-
         // Set up RecyclerView with Grid Layout
         personaRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
-        //personaAdapter = new PersonaAdapter(dummyPersonas,this, this);
 
 
- //DUMMY DATA TEST  FOR THE RECYCLER VIEW
+        // here we are not using a populated list;  since we are using LiveData (from ViewModel)
+        //  it will be updated via LiveData
+        personaAdapter = new PersonaAdapter(new ArrayList<>(), this, this);
+        personaRecyclerView.setAdapter(personaAdapter);
+
+
+/* //DUMMY DATA TEST  FOR THE RECYCLER VIEW
         personaAdapter = new PersonaAdapter(createDummyPersonas(),
                 persona -> {
                     // Handle persona click event here, e.g., open ChatActivity
@@ -59,9 +60,8 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
                     Toast.makeText(MainActivity.this, persona.getDescription() + " long clicked!", Toast.LENGTH_SHORT).show();
                 }
         );
+        personaRecyclerView.setAdapter(personaAdapter);*/
 
-        personaRecyclerView.setAdapter(personaAdapter);
-   /*
         // VIEWMODEL TO UPDATE IN REAL TIME CHANGES ON THE DATA AND UI
         // Initialize ViewModel
         personaViewModel = new ViewModelProvider(this).get(PersonaViewModel.class);
@@ -70,11 +70,10 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
         personaViewModel.getAllPersonas().observe(this, personas -> {
             if (personas != null) {
                 personaAdapter.setPersonaList(personas);
-
             }
         });
 
-        */
+
 
         // Create New Chat Button Action
         createNewChatButton.setOnClickListener(v -> {
@@ -105,17 +104,18 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
         Toast.makeText(this, "Long press options: Favorite or Delete", Toast.LENGTH_SHORT).show();
     }
 
+    @NonNull
     private List<Persona> createDummyPersonas() {
         List<Persona> personas = new ArrayList<>();
-        personas.add(new Persona("Cybersecurity Expert", "Protects your data and enhances digital security."));
-        personas.add(new Persona("Culture Specialist", "Helps with translations and cultural insights."));
-        personas.add(new Persona("Medical Advisor", "Offers general health and wellness tips."));
-        personas.add(new Persona("Financial Consultant", "Guides you in budgeting and investments."));
-        personas.add(new Persona("Mental Health Coach", "Supports emotional well-being and mindfulness."));
-        personas.add(new Persona("Travel Planner", "Plans your trips with custom itineraries."));
-        personas.add(new Persona("Fitness Instructor", "Provides workout routines and fitness advice."));
-        personas.add(new Persona("Recipe Guru", "Suggests easy recipes for every occasion."));
-        personas.add(new Persona("History Enthusiast", "Explores major historical events and figures."));
+        personas.add(new Persona("899","Cybersecurity Expert", "Protects your data and enhances digital security."));
+        personas.add(new Persona("990","Culture Specialist", "Helps with translations and cultural insights."));
+        personas.add(new Persona("991","Medical Advisor", "Offers general health and wellness tips."));
+        personas.add(new Persona("992","Financial Consultant", "Guides you in budgeting and investments."));
+        personas.add(new Persona("993","Mental Health Coach", "Supports emotional well-being and mindfulness."));
+        personas.add(new Persona("994","Travel Planner", "Plans your trips with custom itineraries."));
+        personas.add(new Persona("995","Fitness Instructor", "Provides workout routines and fitness advice."));
+        personas.add(new Persona("996","Recipe Guru", "Suggests easy recipes for every occasion."));
+        personas.add(new Persona("997","History Enthusiast", "Explores major historical events and figures."));
         return personas;
     }
 }
