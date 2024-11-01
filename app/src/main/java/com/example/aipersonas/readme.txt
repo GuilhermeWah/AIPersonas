@@ -1,7 +1,12 @@
 # AI Personas Chat Application
 
-## Project Overview
-This project aims to create an AI-driven chat application that allows users to interact with a variety of virtual personas. Each persona specializes in a different field, such as cybersecurity, health, or travel planning. Users can initiate chats, create new personas, and revisit previous conversations, much like interacting with contacts in popular chat applications like WhatsApp or Telegram.
+@hi guys,
+I  made this document to serve as a base, it will keep us on the same page.
+All the things related to architecture and design can be found here.
+@components, architecture being used, resources, packages ...
+@let me know if you guys need anything.
+@let's try to maintain a pattern.  It will help us a lot while developing this project.
+--->  Thank you <-----
 
 ## Application Architecture
 The project is built with an MVVM (Model-View-ViewModel) architecture to enhance code separation and scalability. Below are details about the implemented components, packages, and design patterns.
@@ -51,16 +56,14 @@ The project is built with an MVVM (Model-View-ViewModel) architecture to enhance
 - **Dummy Data**: Currently, dummy personas have been added for testing the RecyclerView and UI flow.
 
 ## Work Yet to be Done
-- **Firebase Integration for Chat Storage**: Implement Firestore to save and retrieve conversations, allowing cross-device sync.
-- **Persona Creation Feature**: Allow users to create custom personas through a form in the UI.
-- **Search Chat Feature**: Implement a search functionality for existing chats.
-- **GTP API Integration**: Connect with OpenAI GPT to provide meaningful responses by personas during chat sessions.
-- **Favorite/Delete Persona Feature**: Complete the implementation for long press actions on persona cards to favorite or delete.
-
+OK ==>  **Firebase Integration for Chat Storage**: Implement Firestore to save and retrieve conversations, allowing cross-device sync.
+OK ==>  **Persona Creation Feature**: Allow users to create custom personas through a form in the UI.
+------  **Search Chat Feature**: Implement a search functionality for existing chats.
+------  **GTP API Integration**: Connect with OpenAI GPT to provide meaningful responses by personas during chat sessions.
+OK ===> **Favorite/Delete Persona Feature**: Complete the implementation for long press actions on persona cards to favorite or delete.
 
 
 #Architecture Database :
-
 Users (Collection)
 └── UserID (Document - based on uid)
     ├── Personas (Sub-Collection)
@@ -72,7 +75,6 @@ Users (Collection)
 
 
  Dataflow idea:
-
  Suggested Adjustments for Better Integration:
  Repository Adjustments:
 
@@ -110,7 +112,65 @@ Users (Collection)
  Each user’s personas and chats are isolated from one another,
  ensuring privacy and a seamless user experience.
 
+
+RECENT PROGRESS:
+
+0. We are almost done with the entire project's interface.
+We gathered all the resources we would need, such already developed the activities
+and layouts.  We are following the color pattern we described earlier in this document,
+We still have to implement the animations.
+
+1. Updating the Persona Model
+We made some important changes to how our personas are managed:
+Instead of using an integer for the personaId, we switched to a unique string ID using a UUID. This makes our system more compatible with both the Room database and Firebase Firestore.
+We made sure the model works smoothly between Room and Firestore, automatically generating IDs in both constructors.
+2. Tackling Database Issues
+
+Schema Issues:
+We faced some headaches with Room's database schema, specifically around primary keys and "not null" constraints.
+To fix it, we swapped the personaId to a UUID, which solved the data integrity problems.
+Keeping Room Updated:
+We updated the database version to reflect the new schema changes. It took a bit of digging, but now Room and Firestore are on the same page.
+Adapter Problems:
+We fixed an issue where our PersonaAdapter wasn’t attaching to the RecyclerView properly. Now, the list of personas displays as it should.
+3. Long-Click Features for Personas
+
+We added long-click actions for persona cards:
+Delete Persona:
+We can now delete a persona from both Room and Firestore at the same time.
+Users get immediate feedback (a toast message) confirming whether the deletion was successful or not. (using interface callback)--> not too sure if it's good tho.
+
+Favorite Persona:
+We also added a favorite option, though right now it's more of a placeholder until we build out that feature fully. (We already added it on the model and ViewHolder)
+
+4. Enhanced the UI
+We improved the visuals to make the app more user-friendly:
+Persona RecyclerView: There was a weird bug where both the persona name and description were the same, but we fixed that so they display correctly now.
+
+Chat Creation Modal:
+We added a pop-up modal for when users click "Create Chat."
+This modal prompts them for the persona's name and description, which will eventually be used for GPT-generated responses.
+We also worked on making the chat activity layout more dynamic. Depending on which persona a user selects, it now updates the details properly (like the name and profile picture).
+
+5. Syncing Local and Cloud Data
+We made sure data retrieval from both the Room database and Firestore works seamlessly:
+When fetching personas, we first check locally (Room) and then update from Firestore to ensure everything is in sync.
+Write Syncing:
+Whether we're adding, updating, or deleting a persona or a chat, those changes are now properly reflected in both Room and Firestore.
+We also added callbacks to let users know if something didn’t go as planned.
+
+6. Handling Errors
+We ironed out some common errors:
+Null Pointer Exceptions: Fixed an error in ChatActivity that happened when we tried to access UI components before they were ready.
+LiveData Not Updating: Ensured our LiveData observer in the UI was doing its job. Now, when the data changes, the screen responds accordingly.
+
+7. Chat Creation Flow
+We built the logic for creating new chats tied to a persona:
+Users can now click on a persona and initiate a chat. The persona’s name and ID are properly passed into ChatActivity.
+Updated the Chat model to make sure it has everything it needs—like the persona title and ID.
+We added a basic check to make sure users can only create a chat if all the required persona details are provided.
+
 ## Contributors
-- Guilherme Miranda Falcão (Lead Developer & Project Manager)
+- Guilherme Miranda Falcão (Developer & Project Manager)
 - Anastasia (Developer)
 - Aryan (Developer)
