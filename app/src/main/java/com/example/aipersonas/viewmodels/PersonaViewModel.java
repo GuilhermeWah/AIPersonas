@@ -13,13 +13,13 @@ import java.util.List;
 
 public class PersonaViewModel extends AndroidViewModel {
 
-    private PersonaRepository repository;
+    private PersonaRepository personaRepository;
     private LiveData<List<Persona>> allPersonas;
 
     public PersonaViewModel(@NonNull Application application) {
         super(application);
-        repository = new PersonaRepository(application);
-        allPersonas = repository.getAllPersonas();
+        personaRepository = new PersonaRepository(application);
+        allPersonas = personaRepository.getAllPersonas();
     }
 
     public LiveData<List<Persona>> getAllPersonas() {
@@ -27,14 +27,12 @@ public class PersonaViewModel extends AndroidViewModel {
     }
 
     public void insert(Persona persona) {
-        repository.insert(persona);
+        personaRepository.insert(persona);
     }
 
-    public void update(Persona persona) {
-        repository.update(persona);
+    public void delete(Persona persona, PersonaRepository.FirestoreCallback callback) {
+        personaRepository.delete(persona, callback);
     }
 
-    public void delete(Persona persona) {
-        repository.delete(persona);
-    }
+    // Similarly, you can add update and delete methods if required.
 }

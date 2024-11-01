@@ -21,10 +21,10 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-        sendButton = findViewById(R.id.buttonSendMessage);
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+
+        sendButton = findViewById(R.id.buttonSendMessage);
 
         // Retrieve the chatId from the intent and use it to load chat messages
         int chatId = getIntent().getIntExtra("chatId", -1);

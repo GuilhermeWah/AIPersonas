@@ -17,7 +17,7 @@
             android:id="@+id/personaTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Persona Title"
+            android:text="@string/persona_title"
             android:textSize="18sp"
             android:textColor="@color/primary_dark"
             android:fontFamily="@font/roboto_bold" />
@@ -27,7 +27,7 @@
             android:id="@+id/lastMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Last message content"
+            android:text="@string/last_message_content"
             android:textSize="14sp"
             android:textColor="@color/accent_dark"
             android:fontFamily="@font/roboto_regular"

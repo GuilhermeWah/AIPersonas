@@ -6,10 +6,7 @@ import androidx.room.Delete;
 import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
-import androidx.room.OnConflictStrategy;
-
 import com.example.aipersonas.models.Chat;
-
 import java.util.List;
 
 @Dao
@@ -24,9 +21,11 @@ public interface ChatDAO {
     @Delete
     void delete(Chat chat);
 
+    /*
     @Query("SELECT * FROM chat_table WHERE userId = :userId ORDER BY timestamp DESC")
     LiveData<List<Chat>> getChatsForPersona(int personaId);
+    */
 
-    @Query("SELECT * FROM chat_table")
-    LiveData<List<Chat>> getAllChats();
+    @Query("SELECT * FROM chat_table WHERE userId = :userId ORDER BY timestamp DESC")
+    LiveData<List<Chat>> getAllChats(String userId);
 }

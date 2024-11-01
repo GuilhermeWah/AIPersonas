@@ -2,10 +2,13 @@ package com.example.aipersonas.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
@@ -14,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.aipersonas.R;
 import com.example.aipersonas.adapters.PersonaAdapter;
 import com.example.aipersonas.models.Persona;
+import com.example.aipersonas.repositories.PersonaRepository;
 import com.example.aipersonas.viewmodels.PersonaViewModel;
 
 import java.util.ArrayList;
@@ -73,21 +77,65 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
             }
         });
 
+        // create new persona chat button
+        createNewChatButton.setOnClickListener(v -> showCreateChatDialog());
 
-
-        // Create New Chat Button Action
-        createNewChatButton.setOnClickListener(v -> {
-            // Redirect to Create Persona Activity
-            Intent intent = new Intent(MainActivity.this, MainActivity.class);
-            startActivity(intent);
-        });
-
-        // Search Chat Button Action
+        // @TODO: search chat button
         searchChatButton.setOnClickListener(v -> {
             // Implement search functionality
             Toast.makeText(MainActivity.this, "Search Chat functionality coming soon...", Toast.LENGTH_SHORT).show();
         });
     }
+
+    //  show dialog for creating a new persona/chat
+    private void showCreateChatDialog() {
+        // Inflate the dialog layout
+        LayoutInflater inflater = LayoutInflater.from(this);
+        View dialogView = inflater.inflate(R.layout.create_personamodal, null);
+
+        // Initialize the EditTexts from the modal  layout we created
+        EditText personaTitleEditText = dialogView.findViewById(R.id.editTextPersonaTitle);
+        EditText personaDescriptionEditText = dialogView.findViewById(R.id.editTextPersonaDescription);
+
+        // build and show the modal
+        new AlertDialog.Builder(this)
+                .setTitle("Create New Persona")
+                .setView(dialogView)
+                .setPositiveButton("Create", (dialog, which) -> {
+                    String title = personaTitleEditText.getText().toString().trim();
+                    String description = personaDescriptionEditText.getText().toString().trim();
+
+                    if (!title.isEmpty() && !description.isEmpty()) {
+                        // here we are creating the persona and storing it on the db
+                        Persona newPersona = new Persona(title, description);
+                        personaViewModel.insert(newPersona);
+
+                        Toast.makeText(MainActivity.this, "Persona created successfully!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(MainActivity.this, "Please enter a title and description!", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .create()
+                .show();
+    }
+
+    private void deletePersona(Persona persona) {
+        personaViewModel.delete(persona, new PersonaRepository.FirestoreCallback() {
+            @Override
+            public void onSuccess() {
+                // Persona successfully deleted
+                Toast.makeText(MainActivity.this, "Persona deleted", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Exception e) {
+                // Failed to delete persona
+                Toast.makeText(MainActivity.this, "Failed to delete persona: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
 
     @Override
     public void onPersonaClick(Persona persona) {
@@ -99,23 +147,34 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
 
     @Override
     public void onPersonaLongClick(Persona persona) {
-        // Display options for favorite or delete persona
-        // Implement context menu or dialog for additional actions
-        Toast.makeText(this, "Long press options: Favorite or Delete", Toast.LENGTH_SHORT).show();
+        // Create an AlertDialog to give user options for delete or favorite
+        new AlertDialog.Builder(this)
+                .setTitle("Choose Action")
+                .setItems(new String[]{"Delete", "Favorite"}, (dialog, which) -> {
+                    switch (which) {
+                        case 0: // Delete
+                            deletePersona(persona);
+                            break;
+                        case 1: // Favorite
+                            //@TODO:favoritePersona(persona);
+                            break;
+                    }
+                })
+                .show();
     }
-
+    //dummy datam just to test.
     @NonNull
     private List<Persona> createDummyPersonas() {
         List<Persona> personas = new ArrayList<>();
-        personas.add(new Persona("899","Cybersecurity Expert", "Protects your data and enhances digital security."));
-        personas.add(new Persona("990","Culture Specialist", "Helps with translations and cultural insights."));
-        personas.add(new Persona("991","Medical Advisor", "Offers general health and wellness tips."));
-        personas.add(new Persona("992","Financial Consultant", "Guides you in budgeting and investments."));
-        personas.add(new Persona("993","Mental Health Coach", "Supports emotional well-being and mindfulness."));
-        personas.add(new Persona("994","Travel Planner", "Plans your trips with custom itineraries."));
-        personas.add(new Persona("995","Fitness Instructor", "Provides workout routines and fitness advice."));
-        personas.add(new Persona("996","Recipe Guru", "Suggests easy recipes for every occasion."));
-        personas.add(new Persona("997","History Enthusiast", "Explores major historical events and figures."));
+        personas.add(new Persona( "Cybersecurity Expert", "Protects your data and enhances digital security."));
+        personas.add(new Persona( "Culture Specialist", "Helps with translations and cultural insights."));
+        personas.add(new Persona( "Medical Advisor", "Offers general health and wellness tips."));
+        personas.add(new Persona( "Financial Consultant", "Guides you in budgeting and investments."));
+        personas.add(new Persona( "Mental Health Coach", "Supports emotional well-being and mindfulness."));
+        personas.add(new Persona( "Travel Planner", "Plans your trips with custom itineraries."));
+        personas.add(new Persona( "Fitness Instructor", "Provides workout routines and fitness advice."));
+        personas.add(new Persona( "Recipe Guru", "Suggests easy recipes for every occasion."));
+        personas.add(new Persona( "History Enthusiast", "Explores major historical events and figures."));
         return personas;
     }
 }

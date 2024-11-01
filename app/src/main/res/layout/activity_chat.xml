@@ -77,10 +77,12 @@
             android:id="@+id/buttonSendMessage"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:src="@drawable/ic_send_icon"
             android:background="@drawable/rounded_send_button_background"
             android:contentDescription="Send message"
-            android:src="@drawable/ic_send_icon"
-            app:tint="@color/background_light" />
+            android:scaleType="fitCenter"
+
+             />
     </LinearLayout>
 
 </RelativeLayout>

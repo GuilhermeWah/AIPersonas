@@ -48,6 +48,11 @@ public class PersonaRepository {
         }
     }
 
+    public interface FirestoreCallback {
+        void onSuccess();
+        void onFailure(Exception e);
+    }
+
 // Fetch personas from Firestore and cache them in Room
 private void fetchPersonasFromFirestore() {
 
@@ -60,7 +65,7 @@ private void fetchPersonasFromFirestore() {
                     // Clear old data to avoid duplication
                     personaDAO.deleteAll();
 
-                    // Insert fetched data into Room
+                    // data we fetched is inserted on room; sync online and offline
                     for (DocumentSnapshot document : queryDocumentSnapshots) {
                         Persona persona = document.toObject(Persona.class);
                         personaDAO.insert(persona);
@@ -73,7 +78,7 @@ private void fetchPersonasFromFirestore() {
             });
 }
 
-// Method to return all Personas (from Room database)
+// this method returns all the personas from the roomDB
 public LiveData<List<Persona>> getAllPersonas() {
     return allPersonas; // Data is sourced from Room, which acts as the local cache
 }
@@ -123,7 +128,7 @@ public LiveData<List<Persona>> getAllPersonas() {
     }
 
     // Method to delete a Persona
-    public void delete(Persona persona) {
+    public void delete(Persona persona, FirestoreCallback callback) {
         // Delete from Room Database asynchronously
         executor.execute(() -> {
             personaDAO.delete(persona);
@@ -134,11 +139,14 @@ public LiveData<List<Persona>> getAllPersonas() {
                     .document(String.valueOf(persona.getPersonaId()))
                     .delete()
                     .addOnSuccessListener(aVoid -> {
-                        // Successfully deleted from Firestore
+                        if (callback != null) {
+                            callback.onSuccess();
+                        }
                     })
                     .addOnFailureListener(e -> {
-                        // Log error
-                        e.printStackTrace();
+                        if (callback != null) {
+                            callback.onFailure(e);
+                        }
                     });
         });
     }

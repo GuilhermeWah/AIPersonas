@@ -47,7 +47,7 @@ public class PersonaAdapter extends RecyclerView.Adapter<PersonaAdapter.PersonaV
     @Override
     public void onBindViewHolder(@NonNull PersonaViewHolder holder, int position) {
         Persona persona = personaList.get(position);
-        holder.title.setText(persona.getDescription());
+        holder.title.setText(persona.getName());
         holder.description.setText(persona.getDescription());
 
         holder.itemView.setOnClickListener(v -> chatClickListener.onPersonaClick(persona));

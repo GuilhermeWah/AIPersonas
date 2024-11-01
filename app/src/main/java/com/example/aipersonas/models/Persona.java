@@ -4,21 +4,24 @@ import androidx.annotation.NonNull;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
+import java.util.UUID;
+
 @Entity(tableName = "persona_table")
 public class Persona {
 
-    @PrimaryKey
-    @NonNull
+    @PrimaryKey @NonNull
     private String personaId;  // ID shared with Firestore (String instead of int)
     private String name;
     private String description;
 
     // Empty constructor for Firestore serialization
-    public Persona(String _tmpName, String _tmpDescription) {}
+    public Persona() {
+        this.personaId = UUID.randomUUID().toString(); // Manually generate ID
+    }
 
     // Constructor
-    public Persona(String personaId, String name, String description) {
-        this.personaId = personaId;
+    public Persona(String name, String description) {
+        this.personaId = UUID.randomUUID().toString(); // Manually generate ID
         this.name = name;
         this.description = description;
     }
@@ -31,6 +34,14 @@ public class Persona {
 
     public void setPersonaId(@NonNull String personaId) {
         this.personaId = personaId;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getName() {

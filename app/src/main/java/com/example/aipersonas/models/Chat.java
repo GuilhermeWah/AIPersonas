@@ -16,6 +16,7 @@ public class Chat {
 
     // Constructor
     public Chat(String userId,String personaId, String personaTitle, String lastMessage, long timestamp) {
+        this.userId = userId;
         this.personaId = personaId;
         this.personaTitle = personaTitle;
         this.lastMessage = lastMessage;
@@ -27,9 +28,14 @@ public class Chat {
         return chatId;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
     public void setChatId(int chatId) {
         this.chatId = chatId;
     }
+
     public void setLastMessage (String lastMessage){
         this.lastMessage = lastMessage;
     }
