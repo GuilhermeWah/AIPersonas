@@ -44,6 +44,10 @@ public class PersonaAdapter extends RecyclerView.Adapter<PersonaAdapter.PersonaV
         return new PersonaViewHolder(view);
     }
 
+
+
+    //nov 5th --> we are changing it since the flow of our project activity has changed.
+    //Now, instead of opening the chat activity, we have to open the ChatList Activity.
     @Override
     public void onBindViewHolder(@NonNull PersonaViewHolder holder, int position) {
         Persona persona = personaList.get(position);

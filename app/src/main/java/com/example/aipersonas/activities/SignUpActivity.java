@@ -2,6 +2,7 @@ package com.example.aipersonas.activities;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,6 +13,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.aipersonas.R;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SignUpActivity extends AppCompatActivity {
 
@@ -25,8 +30,7 @@ public class SignUpActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
 
-        // Initialize Firebase Auth
-        mAuth = FirebaseAuth.getInstance();
+
 
         // Initialize UI elements
         etFullName = findViewById(R.id.etFullName);
@@ -61,17 +65,43 @@ public class SignUpActivity extends AppCompatActivity {
 
         if (validateInput(fullName, email, password, confirmPassword)) {
             // Proceed with Firebase Authentication sign-up
+
+            mAuth = FirebaseAuth.getInstance();
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+
             mAuth.createUserWithEmailAndPassword(email, password)
                     .addOnCompleteListener(this, task -> {
                         if (task.isSuccessful()) {
                             // Sign up success
                             Toast.makeText(SignUpActivity.this, "Sign up successful!", Toast.LENGTH_SHORT).show();
                             finish();
+
+                            String userId = mAuth.getCurrentUser().getUid();
+
+                            // Create a user map
+                            Map<String, Object> userMap = new HashMap<>();
+                            userMap.put("userId", userId);
+                            userMap.put("email", email);  // Any other user data you wish to save
+
+                            // Save the user in Firestore under "Users" collection
+                            db.collection("Users").document(userId)
+                                    .set(userMap)
+                                    .addOnSuccessListener(aVoid -> {
+                                        Log.d("Firestore", "User successfully added to Firestore");
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.w("Firestore", "Error adding user", e);
+                                    });
+
                         } else {
                             // If sign-up fails, display a message to the user.
                             Toast.makeText(SignUpActivity.this, "Sign up failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
+
+
+
+
         }
     }
 

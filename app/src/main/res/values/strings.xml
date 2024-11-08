@@ -32,5 +32,7 @@
     <string name="persona_image_desc">Persona Image</string>
     <string name="last_message_content">Last message content</string>
     <string name="persona_title">Persona Title</string>
+    <string name="add_chat">Add Chat</string>
+    <string name="conversations">Conversations</string>
 
 </resources>

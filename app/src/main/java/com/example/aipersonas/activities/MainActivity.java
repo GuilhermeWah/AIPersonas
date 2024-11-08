@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
     @Override
     public void onPersonaClick(Persona persona) {
         // Open ChatActivity with selected persona
-        Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+        Intent intent = new Intent(MainActivity.this, ChatListActivity.class);
         intent.putExtra("personaId", persona.getPersonaId());
         startActivity(intent);
     }
@@ -177,5 +177,7 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
         personas.add(new Persona( "History Enthusiast", "Explores major historical events and figures."));
         return personas;
     }
+
+
 }
 
