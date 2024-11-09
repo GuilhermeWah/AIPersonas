@@ -171,6 +171,6 @@ Updated the Chat model to make sure it has everything it needs—like the person
 We added a basic check to make sure users can only create a chat if all the required persona details are provided.
 
 ## Contributors
-- Guilherme Miranda Falcão (Developer & Project Manager)
+- Guilherme Miranda (Developer & Project Lead)
 - Anastasia (Developer)
 - Aryan (Developer)
