@@ -1,15 +1,24 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+# Gradle files
+.gradle/
+build/
+
+# Local configuration file (SDK location, signing keys, etc.)
 local.properties
+/app/google-services.json
+
+# Android Studio files
+.idea/
+*.iml
+
+# Log files
+*.log
+
+# Android build output
+*.apk
+*.aab
+*.aar
+
+# Ignore virtual environment or other hidden system files
+.DS_Store
+Thumbs.db
+ 
