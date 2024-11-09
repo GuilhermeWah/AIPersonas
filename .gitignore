@@ -4,7 +4,7 @@ build/
 
 # Local configuration file (SDK location, signing keys, etc.)
 local.properties
-/app/google-services.json
+
 
 # Android Studio files
 .idea/
