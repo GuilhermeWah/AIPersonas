@@ -45,15 +45,16 @@ dependencies {
     implementation("com.google.android.material:material:1.6.1")
 
     // Firebase BOM (to manage versions of Firebase libraries consistently)
-    implementation(platform("com.google.firebase:firebase-bom:33.5.0"))
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-analytics")
 
+
     // Google Play Services - Recaptcha
     implementation("com.google.android.gms:play-services-recaptcha:17.1.0")
     implementation("com.google.android.gms:play-services-oss-licenses:17.0.0")
-
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
     // Room Database
     implementation("androidx.room:room-runtime:2.4.3")
     implementation("androidx.room:room-ktx:2.4.3")

@@ -29,10 +29,14 @@ public interface PersonaDAO {
     @Query("DELETE FROM persona_table")
     void deleteAll();
 
+    @Query("SELECT * FROM persona_table WHERE personaId = :personaId")
+    LiveData<Persona> getPersonaById(String personaId);
 
     // is used to hold and observe all the personas in the Room database.
     // not sure if it is a good solution, however it will be responsible for updating
     // the UI whenever the data changes (automatically)
     @Query("SELECT * FROM persona_table ORDER BY name ASC")
     LiveData<List<Persona>> getAllPersonas();
+
+
 }

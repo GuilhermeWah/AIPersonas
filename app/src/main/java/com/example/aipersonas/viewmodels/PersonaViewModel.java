@@ -34,5 +34,9 @@ public class PersonaViewModel extends AndroidViewModel {
         personaRepository.delete(persona, callback);
     }
 
+    public LiveData<Persona> getPersonaById(String personaId) {
+        return personaRepository.getPersonaById(personaId);
+    }
+
     // Similarly, you can add update and delete methods if required.
 }

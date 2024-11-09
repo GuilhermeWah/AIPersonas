@@ -53,6 +53,17 @@ public class PersonaRepository {
         void onFailure(Exception e);
     }
 
+    // this method returns all the personas from the roomDB
+    public LiveData<List<Persona>> getAllPersonas() {
+        return allPersonas; // Data is sourced from Room, which acts as the local cache
+    }
+
+    // Method to get a specific persona by ID
+    public LiveData<Persona> getPersonaById(String personaId) {
+        // Now use the initialized personaDAO instance
+        return personaDAO.getPersonaById(personaId);
+    }
+
 // Fetch personas from Firestore and cache them in Room
 private void fetchPersonasFromFirestore() {
 
@@ -76,11 +87,6 @@ private void fetchPersonasFromFirestore() {
                 // Log error if data fetching fails
                 e.printStackTrace();
             });
-}
-
-// this method returns all the personas from the roomDB
-public LiveData<List<Persona>> getAllPersonas() {
-    return allPersonas; // Data is sourced from Room, which acts as the local cache
 }
 
 

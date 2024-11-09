@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import android.util.Log;
 
 import com.example.aipersonas.R;
 import com.example.aipersonas.adapters.PersonaAdapter;
@@ -29,6 +30,7 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
     private PersonaAdapter personaAdapter;
     private Button createNewChatButton;
     private Button searchChatButton;
+    private PersonaRepository personaRepository;
 
     private PersonaViewModel personaViewModel;
 
@@ -40,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
         personaRecyclerView = findViewById(R.id.personaRecyclerView);
         createNewChatButton = findViewById(R.id.createNewChatButton);
         searchChatButton = findViewById(R.id.searchChatButton);
+        personaRepository = new PersonaRepository(getApplication());
 
         // Set up RecyclerView with Grid Layout
         personaRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
@@ -137,12 +140,24 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
     }
 
 
+    /*   @Override
+      public void onPersonaClick(Persona persona) {
+          // Open ChatActivity with selected persona
+          Intent intent = new Intent(MainActivity.this, ChatListActivity.class);
+          intent.putExtra("personaId", persona.getPersonaId());
+          startActivity(intent);
+
+      }*/
     @Override
     public void onPersonaClick(Persona persona) {
-        // Open ChatActivity with selected persona
-        Intent intent = new Intent(MainActivity.this, ChatListActivity.class);
-        intent.putExtra("personaId", persona.getPersonaId());
-        startActivity(intent);
+        if (persona != null) {
+            Log.d("MainActivity", "Persona clicked: " + persona.getPersonaId());
+            Intent intent = new Intent(MainActivity.this, ChatListActivity.class);
+            intent.putExtra("personaId", persona.getPersonaId());
+            startActivity(intent);
+        } else {
+            Log.e("MainActivity", "Persona is null, unable to start ChatListActivity.");
+        }
     }
 
     @Override

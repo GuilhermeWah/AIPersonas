@@ -27,7 +27,7 @@ public class ChatActivity extends AppCompatActivity {
         sendButton = findViewById(R.id.buttonSendMessage);
 
         // Retrieve the chatId from the intent and use it to load chat messages
-        int chatId = getIntent().getIntExtra("chatId", -1);
+        String chatId = getIntent().getStringExtra("chatId");
         // TODO: Load messages for the specific chat using the chatId
 
 

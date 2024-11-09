@@ -20,6 +20,7 @@ public class Chat {
     private String userId;  // Foreign key to link to a User
     private String personaId;  // Foreign key to link to a Persona
     private String personaTitle;  // Optional field to store the name of the associated persona
+
     private String lastMessage;
     private Timestamp timestamp;
 

@@ -17,10 +17,10 @@ public class ChatViewModel extends AndroidViewModel {
     private LiveData<List<Chat>> allChats;
 
 
-    public ChatViewModel(@NonNull Application application) {
+    public ChatViewModel(@NonNull Application application, String personaId) {
         super(application);
-        repository = new ChatRepository(application);
-        allChats = repository.getAllChats();
+        repository = new ChatRepository(application, personaId);
+        allChats = repository.getChatsForPersona(personaId);
 
     }
 
@@ -28,14 +28,14 @@ public class ChatViewModel extends AndroidViewModel {
         repository.insert(chat, personaId);
     }
 
-    public void update(Chat chat) {
+    public void update(Chat chat, String personaId) {
 
-        repository.update(chat);
+        repository.update(chat, personaId);
     }
 
-    public void delete(Chat chat) {
+    public void delete(Chat chat, String personaId) {
 
-        repository.delete(chat);
+        repository.delete(chat, personaId);
     }
 
     public LiveData<List<Chat>> getAllChats() {

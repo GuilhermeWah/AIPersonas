@@ -1,5 +1,6 @@
 package com.example.aipersonas.activities;
 
+import android.app.Application;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -13,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.aipersonas.activities.MainActivity;
 import com.example.aipersonas.R;
+import com.example.aipersonas.repositories.ChatRepository;
+import com.example.aipersonas.repositories.PersonaRepository;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class SignInActivity extends AppCompatActivity {
@@ -61,16 +64,32 @@ public class SignInActivity extends AppCompatActivity {
             auth.signInWithEmailAndPassword(email, password)
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
+
                             Toast.makeText(SignInActivity.this, "Sign In Successful", Toast.LENGTH_SHORT).show();
+
+
+                            //may cause overhead, since we are not going to access the data immediately
+                            // also, we need to use personaId on the constructor for chatrepository, at this point we dont have it yet
+                /*          // we gonna use personaRepo in main Activity and ChatRepo in ChatListActivity
+
+                            // Initialize Repositories to ensure data is synchronized
+                            Application application = getApplication();
+                            new PersonaRepository(application);
+                            new ChatRepository(application);*/
+
                             // Redirect to main activity
                             startActivity(new Intent(SignInActivity.this, MainActivity.class));
                             finish();
+
+
                         } else {
                             Toast.makeText(SignInActivity.this, "Authentication Failed: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                         }
                     });
         }
     }
+
+
 
     // validating the when signing in the user
     private boolean validateInputs(String email, String password) {
@@ -84,4 +103,6 @@ public class SignInActivity extends AppCompatActivity {
         }
         return true;
     }
+
+
 }
