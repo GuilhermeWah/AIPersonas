@@ -1,1 +1,58 @@
-/build
+# Gradle files
+.gradle/
+build/
+
+# Local configuration file (SDK location, signing keys, etc.)
+local.properties
+
+# Firebase configuration file
+/app/google-services.json
+
+# Android Studio files
+.idea/
+*.iml
+
+# Ignore Android build output
+build/
+*.apk
+*.aab
+*.aar
+
+# Generated files and caches
+.cxx/
+.externalNativeBuild/
+captures/
+outputs/
+*.class
+
+# Node modules (if any JavaScript is involved in the project)
+node_modules/
+
+# Ignore binary and lock files
+*.bin
+*.lock
+
+# Log files
+*.log
+
+# Mac system files
+.DS_Store
+*.swp
+*.swo
+Thumbs.db
+
+
+# Ignore miscellaneous Android Studio project files
+*.vscode/
+*.orig
+*.bak
+*.tmp
+*.backup
+
+# Crashlytics and Firebase
+crashlytics.properties
+fabric.properties
+
+# Local Gradle configuration
+gradle-app.setting
+.gradle/
