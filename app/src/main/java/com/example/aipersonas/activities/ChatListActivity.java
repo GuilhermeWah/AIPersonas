@@ -16,7 +16,7 @@ import com.example.aipersonas.R;
 import com.example.aipersonas.adapters.ChatListAdapter;
 import com.example.aipersonas.models.Chat;
 import com.example.aipersonas.models.Persona;
-import com.example.aipersonas.viewmodels.ChatViewModel;
+import com.example.aipersonas.viewmodels.ChatListViewModel;
 import com.example.aipersonas.viewmodels.ChatViewModelFactory;
 import com.example.aipersonas.viewmodels.PersonaViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -29,7 +29,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
 
     private static final String TAG = "ChatListActivity";
     private RecyclerView chatListRecyclerView;
-    private ChatViewModel chatViewModel;
+    private ChatListViewModel chatListViewModel;
     private PersonaViewModel personaViewModel;
     private ChatListAdapter chatListAdapter;
     private Persona currentPersona;
@@ -73,7 +73,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
 
     private void setupViewModels(String personaId) {
         ChatViewModelFactory factory = new ChatViewModelFactory(getApplication(), personaId);
-        chatViewModel = new ViewModelProvider(this, factory).get(ChatViewModel.class);
+        chatListViewModel = new ViewModelProvider(this, factory).get(ChatListViewModel.class);
 
         personaViewModel = new ViewModelProvider(this).get(PersonaViewModel.class);
         personaViewModel.getPersonaById(personaId).observe(this, persona -> {
@@ -85,7 +85,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
             }
         });
 
-        chatViewModel.getChatsForPersona(personaId).observe(this, chats -> {
+        chatListViewModel.getChatsForPersona(personaId).observe(this, chats -> {
             chatListAdapter.setChatList(chats);
         });
     }
@@ -98,7 +98,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
                 String userId = auth.getCurrentUser().getUid();
 
                 Chat newChat = new Chat(userId, currentPersona.getPersonaId(), currentPersona.getName(), "New Chat", new Timestamp(new Date()));
-                chatViewModel.insert(newChat, personaId);
+                chatListViewModel.insert(newChat, personaId);
 
                 Toast.makeText(ChatListActivity.this, "Chat added successfully!", Toast.LENGTH_SHORT).show();
             } else {

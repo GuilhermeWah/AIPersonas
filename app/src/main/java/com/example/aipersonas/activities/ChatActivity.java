@@ -10,13 +10,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.aipersonas.R;
-import com.example.aipersonas.viewmodels.ChatViewModel;
+import com.example.aipersonas.viewmodels.ChatListViewModel;
 import com.example.aipersonas.viewmodels.ChatViewModelFactory;
 
 public class ChatActivity extends AppCompatActivity {
 
     private static final String TAG = "ChatActivity";
-    private ChatViewModel chatViewModel;
+    private ChatListViewModel chatListViewModel;
     private ImageButton sendButton;
     private EditText messageInput;
     private String chatId;
@@ -57,11 +57,11 @@ public class ChatActivity extends AppCompatActivity {
 
     private void initializeViewModel() {
         ChatViewModelFactory factory = new ChatViewModelFactory(getApplication(), personaId);
-        chatViewModel = new ViewModelProvider(this, factory).get(ChatViewModel.class);
+        chatListViewModel = new ViewModelProvider(this, factory).get(ChatListViewModel.class);
     }
 
     private void observeChats() {
-        chatViewModel.getChatsForPersona(personaId).observe(this, chats -> {
+        chatListViewModel.getChatsForPersona(personaId).observe(this, chats -> {
             // TODO: Update UI with chat data
             Log.d(TAG, "Chats observed: " + chats.size());
         });
@@ -80,7 +80,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void sendMessage(String message) {
-        chatViewModel.sendMessageToGPT(message, personaId, chatId);
+        chatListViewModel.sendMessageToGPT(message, personaId, chatId);
         Log.d(TAG, "Message sent: " + message);
     }
 }
