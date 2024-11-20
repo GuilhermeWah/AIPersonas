@@ -208,6 +208,23 @@ Here our db structure as of Nov 8th:
 My last commit :  08/11/2024   (Gui)
 
 
+
+Ours chats chats are now explicitly nested under their respective personas.
+Found it a better solution, it aligns better with the application guys.
+The only problem would be searching for a specific chat. It will require
+us to traverse multiple subcollections. Requires a lot of computational resource.
+We can use the feature to search a specific chat inside persona chats; and restrict this search
+to Chats subcollection inside each persona.
+
+
+Users (Collection)
+└── UserID (Document)
+    ├── Personas (Sub-Collection)
+    │    └── PersonaID (Document)
+    │        └── Chats (Sub-Collection)
+    │             └── ChatID (Document)
+
+
 ## Contributors
 - Guilherme Miranda Falcão (Developer & Project Manager)
 - Anastasia (Developer)
