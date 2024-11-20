@@ -1,70 +1,86 @@
 package com.example.aipersonas.activities;
 
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkInfo;
-import android.net.NetworkRequest;
 import android.os.Bundle;
-import android.widget.Button;
+import android.util.Log;
+import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import com.example.aipersonas.R;
-import com.google.android.material.snackbar.Snackbar;
+import com.example.aipersonas.viewmodels.ChatViewModel;
+import com.example.aipersonas.viewmodels.ChatViewModelFactory;
 
 public class ChatActivity extends AppCompatActivity {
 
+    private static final String TAG = "ChatActivity";
+    private ChatViewModel chatViewModel;
     private ImageButton sendButton;
+    private EditText messageInput;
+    private String chatId;
+    private String personaId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
+        initializeViews();
+        retrieveIntentData();
+
+        if (personaId == null || chatId == null) {
+            Toast.makeText(this, "Invalid Chat or Persona ID", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        initializeViewModel();
+        observeChats();
+        setupSendMessageListener();
+    }
+
+    private void initializeViews() {
         sendButton = findViewById(R.id.buttonSendMessage);
+        messageInput = findViewById(R.id.editTextMessage);
+    }
 
-        // Retrieve the chatId from the intent and use it to load chat messages
-        String chatId = getIntent().getStringExtra("chatId");
-        // TODO: Load messages for the specific chat using the chatId
+    private void retrieveIntentData() {
+        chatId = getIntent().getStringExtra("chatId");
+        personaId = getIntent().getStringExtra("personaId");
 
+        if (personaId == null || chatId == null) {
+            Log.e(TAG, "Missing personaId or chatId in intent");
+        }
+    }
 
-        sendButton.setOnClickListener(v -> {
-            if (!isOnline()) {
-                Snackbar.make(findViewById(R.id.chatLayout), "You need an internet connection to send messages.", Snackbar.LENGTH_LONG).show();
+    private void initializeViewModel() {
+        ChatViewModelFactory factory = new ChatViewModelFactory(getApplication(), personaId);
+        chatViewModel = new ViewModelProvider(this, factory).get(ChatViewModel.class);
+    }
+
+    private void observeChats() {
+        chatViewModel.getChatsForPersona(personaId).observe(this, chats -> {
+            // TODO: Update UI with chat data
+            Log.d(TAG, "Chats observed: " + chats.size());
+        });
+    }
+
+    private void setupSendMessageListener() {
+        sendButton.setOnClickListener(view -> {
+            String message = messageInput.getText().toString().trim();
+            if (!message.isEmpty()) {
+                messageInput.setText(""); // Clear input
+                sendMessage(message);
             } else {
-                // Proceed with sending the message
-                // TODO: Implement sending the messagesendMessage();
+                Toast.makeText(this, "Message cannot be empty", Toast.LENGTH_SHORT).show();
             }
         });
-
-
     }
 
-    private boolean isOnline() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        return netInfo != null && netInfo.isConnected();
-    }
-
-    private void setupConnectivityListener() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkRequest request = new NetworkRequest.Builder().build();
-
-        connectivityManager.registerNetworkCallback(request, new ConnectivityManager.NetworkCallback() {
-            @Override
-            public void onAvailable(Network network) {
-                runOnUiThread(() -> sendButton.setEnabled(true)); // Enable send button when online
-            }
-
-            @Override
-            public void onLost(Network network) {
-                runOnUiThread(() -> sendButton.setEnabled(false)); // Disable send button when offline
-            }
-        });
+    private void sendMessage(String message) {
+        chatViewModel.sendMessageToGPT(message, personaId, chatId);
+        Log.d(TAG, "Message sent: " + message);
     }
 }
-
-

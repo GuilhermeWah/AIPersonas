@@ -11,27 +11,26 @@ import com.google.firebase.Timestamp;
 import java.util.UUID;
 
 @Entity(tableName = "chat_table")
-@TypeConverters(Converters.class) // Attach the TypeConverter to handle the timestamp field
+@TypeConverters(Converters.class)
 public class Chat {
 
     @PrimaryKey
     @NonNull
-    private String chatId;  // Manually generate ID (UUID) for consistency across Room and Firestore
-    private String userId;  // Foreign key to link to a User
-    private String personaId;  // Foreign key to link to a Persona
-    private String personaTitle;  // Optional field to store the name of the associated persona
-
+    private String chatId; // Preexisting or newly generated UUID
+    private String userId;
+    private String personaId;
+    private String personaTitle;
     private String lastMessage;
     private Timestamp timestamp;
 
-    // Empty Constructor for Firestore serialization
+    // Empty constructor for Firestore serialization
     public Chat() {
-        this.chatId = UUID.randomUUID().toString(); // Generate unique ID
+        // No initialization logic here to avoid accidental ID mismatches
     }
 
-    // Constructor for creating a Chat instance
-    public Chat(String userId, String personaId, String personaTitle, String lastMessage, Timestamp timestamp) {
-        this.chatId = UUID.randomUUID().toString(); // Generate unique ID
+    // Constructor for creating new Chat objects
+    public Chat(@NonNull String userId, String personaId, String personaTitle, String lastMessage, Timestamp timestamp) {
+        this.chatId = UUID.randomUUID().toString();
         this.userId = userId;
         this.personaId = personaId;
         this.personaTitle = personaTitle;
@@ -39,7 +38,24 @@ public class Chat {
         this.timestamp = timestamp;
     }
 
-    // Getters and Setters
+    // Constructor for preexisting Chat objects (e.g., syncing from Firestore)
+    public Chat(@NonNull String chatId, String userId, String personaId, String personaTitle, String lastMessage, Timestamp timestamp) {
+        this.chatId = chatId;
+        this.userId = userId;
+        this.personaId = personaId;
+        this.personaTitle = personaTitle;
+        this.lastMessage = lastMessage;
+        this.timestamp = timestamp;
+    }
+     // Overloading the constructor once again, so that we can use the insert in the chat repo
+    public Chat(String chatId, String personaId, String message) {
+        this.chatId = chatId;
+        this.personaId = personaId;
+        this.lastMessage = message;
+        this.timestamp = Timestamp.now(); // Assign current timestamp
+    }
+
+
     @NonNull
     public String getChatId() {
         return chatId;
