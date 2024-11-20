@@ -13,6 +13,11 @@
     <color name="statusTag">#81C784</color>
     <color name="inputBorder">#A0A0A0</color>
 
+    <!-- Settings Page @TODO: Reorganize our pattern -->
+    <color name="warning">#FFAB00</color>
+    <color name="danger">#B00020</color>
+    <color name="primaryLight">#BB86FC</color>
+    <color name="primary">#6200EE</color>
 
 
     <!--  Additional colors for new layout  -->

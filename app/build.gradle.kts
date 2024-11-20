@@ -66,6 +66,7 @@ dependencies {
     implementation("androidx.room:room-runtime:2.4.3")
     implementation("androidx.room:room-ktx:2.4.3")
     implementation(libs.security.crypto)
+    implementation(libs.activity)
     annotationProcessor("androidx.room:room-compiler:2.4.3") // For Java-based projects
 
 
@@ -73,6 +74,8 @@ dependencies {
     //OkHttp Dependency
     implementation ("com.squareup.okhttp3:okhttp:4.11.0");
 
+    //Aryan Animation Splashscreen
+    implementation("com.airbnb.android:lottie:6.3.0")
 
     // Test Dependencies
     testImplementation("junit:junit:4.13.2")

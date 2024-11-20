@@ -9,6 +9,7 @@ import androidx.lifecycle.LiveData;
 import com.example.aipersonas.databases.ChatDAO;
 import com.example.aipersonas.databases.ChatDatabase;
 import com.example.aipersonas.models.Chat;
+import com.example.aipersonas.models.Message;
 import com.example.aipersonas.utils.NetworkUtils;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -73,6 +74,13 @@ public class ChatRepository {
     public LiveData<List<Chat>> getChatsForPersona(String personaId) {
         return chatDAO.getChatsForPersona(personaId);
     }
+
+    public LiveData<List<Message>> getMessagesForChat(String chatId) {
+        return chatDAO.getMessagesForChat(chatId); // Ensure this DAO method exists
+    }
+
+
+
 
     public void insert(Chat chat, String personaId) {
         executorService.execute(() -> {
@@ -181,6 +189,28 @@ public class ChatRepository {
                 });
     }
 
+    public void fetchMessagesFromFirestore(String chatId) {
+        firebaseFirestore.collection("Users")
+                .document(userId)
+                .collection("Personas")
+                .document(personaId)
+                .collection("Chats")
+                .document(chatId)
+                .collection("Messages")
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    executorService.execute(() -> {
+                        // Insert messages into Room
+                        for (DocumentSnapshot document : queryDocumentSnapshots) {
+                            Message message = document.toObject(Message.class);
+                            chatDAO.insertMessage(message);
+                        }
+                    });
+                })
+                .addOnFailureListener(e -> Log.e("ChatRepository", "Failed to fetch messages: " + e.getMessage()));
+    }
+
+
     private void sendHttpRequest(String apiUrl, String apiKey, String requestBody, ApiCallback callback) {
         OkHttpClient client = new OkHttpClient();
 
@@ -220,6 +250,8 @@ public class ChatRepository {
                 + "\"max_tokens\":100"
                 + "}";
     }
+
+
 
 
     public void sendMessageToGPT(String message, String personaId, String chatId, String gptKey, ApiCallback callback) {
