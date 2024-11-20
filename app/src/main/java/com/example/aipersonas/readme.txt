@@ -207,6 +207,22 @@ Here our db structure as of Nov 8th:
 
 My last commit :  08/11/2024   (Gui)
 
+### Recent Progress
+
+### 0. Database Structure Updates
+Guys, we’ve made some important changes to our database structure to ensure consistency and scalability.
+
+**Firestore Structure**:
+- I have decided to nest chats under their respective personas. Here’s how it looks now:
+
+Users (Collection)
+└── UserID (Document)
+    ├── Personas (Sub-Collection)
+    │    └── PersonaID (Document)
+    │        └── Chats (Sub-Collection)
+    │             └── ChatID (Document)
+
+
 
 
 Ours chats chats are now explicitly nested under their respective personas.
@@ -216,13 +232,76 @@ us to traverse multiple subcollections. Requires a lot of computational resource
 We can use the feature to search a specific chat inside persona chats; and restrict this search
 to Chats subcollection inside each persona.
 
+- This approach ensures a clear one-to-many relationship where a user can have multiple chats with the same persona.
 
-Users (Collection)
-└── UserID (Document)
-    ├── Personas (Sub-Collection)
-    │    └── PersonaID (Document)
-    │        └── Chats (Sub-Collection)
-    │             └── ChatID (Document)
+**Room Database Schema**:
+- The `chat_table` was updated to include:
+- `userId`: Links chats to the authenticated user.
+- `personaId`: Links chats to their associated persona.
+- Now Room mirrors Firestore, making our architecture more consistent:
+
+
+---
+
+### 1. User Model Updates
+- We added the `avatarUrl` attribute to the `User` model. This will support future functionality for profile pictures.
+- Made sure all fields (`userId`, `email`, `name`) are initialized correctly when working with both Room and Firestore.
+- With these changes, the `User` model is now ready for features like account customization.
+
+---
+
+### 2. Chat and Persona Integration
+- Redesigned how chats and personas work together:
+- Chats are now nested under personas in Firestore.
+- Updated `ChatRepository` and `PersonaRepository` to handle this new nested structure.
+- Added methods to fetch chats specific to a persona. This improves data isolation and makes both Room and Firestore easier to manage.
+
+---
+
+### 3. Firestore and Sync Enhancements
+- We fixed mismatched data types—e.g., `ChatID` is now a `String` for Firestore compatibility.
+- Solved an issue where older users didn’t have the updated Firestore subcollections:
+- The app now creates any missing subcollections automatically when a user logs in.
+- Syncing between Room and Firestore is now seamless, ensuring data consistency during persona and chat operations.
+
+---
+
+### 4. UI and Functional Improvements
+**Bottom Navigation Menu**:
+- Menu labels are now permanently visible to improve user accessibility.
+- Fixed some transition issues for smoother navigation between screens.
+
+**MainActivity Enhancements**:
+- Integrated `UserViewModel` to display user-specific data like usernames.
+- Fixed layout inconsistencies to ensure a better experience on different devices.
+
+**Create Chat Modal**:
+- Improved input validation to prevent users from creating chats with invalid or missing persona details.
+
+---
+
+### 5. Addressed Critical Bugs
+**SQLite NOT NULL Constraint**:
+- Resolved crashes caused by `NOT NULL` constraints in the `user_table` when inserting data.
+- Added default values for optional fields like `avatarUrl` to prevent errors.
+
+**LiveData Updates**:
+- Fixed an issue where UI components didn’t respond to data changes in real-time.
+
+**Firestore Write Errors**:
+- Fixed schema mismatch problems causing Firestore write failures, especially for older user accounts.
+
+---
+
+### 6. Key Takeaways
+- Nesting chats under personas in Firestore simplifies our data organization and aligns better with the app’s overall structure.
+- While searching for specific chats across personas now requires traversing multiple subcollections, this approach makes sense for scalability.
+- For now, searching will be limited to persona-level queries, which is less resource-intensive and easier to manage.
+
+Updated Firestore Structure:
+
+
+
 
 
 ## Contributors

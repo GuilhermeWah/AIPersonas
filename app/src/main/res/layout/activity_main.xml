@@ -30,7 +30,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
-        android:text="Guilherme Miranda"
+        android:text="First Last"
         android:textColor="@color/primary_dark"
         android:textSize="24sp"
         android:fontFamily="@font/roboto_bold"
