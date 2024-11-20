@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
         userViewModel.getUser().observe(this, user -> {
                    if(user != null) {
                        TextView userNameTextView = findViewById(R.id.userName);
-                       userNameTextView.setText(user.getName());
+                       userNameTextView.setText(user.getFullName());
                    }
                 });
 

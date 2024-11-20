@@ -53,11 +53,11 @@ public class UserRepository {
                     if (documentSnapshot.exists()) {
                         User user = documentSnapshot.toObject(User.class);
 
-                        // Explicitly set the userId in case it's not automatically mapped
+                        // Explicitly set the userId in case it's not automatically mapped --> don't think we gonn use it tho
                         if (user != null) {
                             user.setUserId(userId); // Ensure userId is set
                         } else {
-                            user = new User(userId, "Default Name", "default@example.com", "default_avatar_url");
+                            user = new User(userId,"Default First Name", "Default Last Name", "default@example.com", "default_avatar_url");
                         }
                         final User finalUser = user;
                         // Insert or update the user in Room database

@@ -10,27 +10,42 @@
     tools:context=".activities.SignUpActivity">
 
   <!-- Header Title -->
+
+  <!-- Full Name Input -->
   <TextView
       android:id="@+id/tvSignUpHeader"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:text="@string/signup_header"
-      android:textStyle="bold"
-      android:textSize="28sp"
+      android:layout_marginBottom="32dp"
       android:fontFamily="@font/roboto_bold"
+      android:text="@string/signup_header"
       android:textColor="@color/primary_dark"
-      android:layout_marginBottom="32dp" />
+      android:textSize="28sp"
+      android:textStyle="bold" />
 
-  <!-- Full Name Input -->
   <EditText
-      android:id="@+id/etFullName"
+      android:id="@+id/etFirstName"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:layout_marginBottom="16dp"
       android:background="@drawable/rounded_input_background"
       android:padding="14dp"
       android:fontFamily="@font/roboto_regular"
-      android:hint="@string/full_name_hint"
+      android:hint="First Name"
+      android:inputType="textPersonName"
+      android:textColor="@color/accent_dark"
+      android:textColorHint="@color/accent_light_60"
+      android:minHeight="48dp" />
+
+  <EditText
+      android:id="@+id/etLastName"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginBottom="16dp"
+      android:background="@drawable/rounded_input_background"
+      android:padding="14dp"
+      android:fontFamily="@font/roboto_regular"
+      android:hint="Last Name"
       android:inputType="textPersonName"
       android:textColor="@color/accent_dark"
       android:textColorHint="@color/accent_light_60"

@@ -9,7 +9,8 @@ public class User {
 
     @PrimaryKey @NonNull
     private String userId;  // ID shared with Firestore
-    private String name;    // User's name (e.g., first and last name)
+    private String firstName;
+    private String lastName;
     private String email;   // User's email
     private String avatarUrl; // Optional: URL to the user's avatar image
 
@@ -18,9 +19,10 @@ public class User {
     }
 
     // Constructor for creating a User instance
-    public User(@NonNull String userId, String name, String email, String avatarUrl) {
+    public User(@NonNull String userId, String firstName, String lastName, String email, String avatarUrl) {
         this.userId = userId;
-        this.name = name;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.avatarUrl = avatarUrl;
     }
@@ -35,13 +37,15 @@ public class User {
         this.userId = userId;
     }
 
-    public String getName() {
-        return name;
+    public String getFirstName() {
+        return  firstName;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public void setFirstName(String firstName) { this.firstName = firstName; }
+
+    public String getLastName() {return lastName;}
+
+    public void setLastName(String lastName) {this.lastName = lastName;}
 
     public String getEmail() {
         return email;
@@ -58,4 +62,10 @@ public class User {
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
     }
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
+
+
 }
