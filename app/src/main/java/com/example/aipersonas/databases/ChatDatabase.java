@@ -9,8 +9,9 @@ import androidx.room.TypeConverters;
 
 import com.example.aipersonas.models.Chat;
 import com.example.aipersonas.models.Persona;
+import com.example.aipersonas.models.User;
 
-@Database(entities = {Persona.class, Chat.class}, version = 12, exportSchema = false)
+@Database(entities = {Persona.class, Chat.class, User.class}, version = 14, exportSchema = false)
 @TypeConverters({Converters.class}) //we created this, because Room doesn't support Timestamp from firebase
 public abstract class ChatDatabase extends RoomDatabase {
 
@@ -18,6 +19,7 @@ public abstract class ChatDatabase extends RoomDatabase {
 
     public abstract PersonaDAO personaDao();
     public abstract ChatDAO chatDao();
+    public abstract UserDAO userDao();
 
     public static synchronized ChatDatabase getInstance(Context context) {
         if (instance == null) {

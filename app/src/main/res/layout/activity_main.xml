@@ -6,22 +6,23 @@
     android:id="@+id/mainLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_light"
+    android:background="@drawable/background_gradient_main"
     tools:context=".activities.MainActivity">
 
     <!-- Profile Picture -->
     <ImageView
         android:id="@+id/profilePicture"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:layout_marginTop="32dp"
-        android:src="@drawable/ic_profile_placeholder"
+        android:layout_width="90dp"
+        android:layout_height="90dp"
+        android:layout_marginTop="20dp"
         android:background="@drawable/rounded_image_background"
+        android:backgroundTint="@color/white"
         android:scaleType="centerCrop"
-        app:layout_constraintStart_toStartOf="parent"
+        android:src="@drawable/ic_profile_placeholder"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="ContentDescription"/>
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- User Name -->
     <TextView
@@ -31,36 +32,67 @@
         android:layout_marginTop="8dp"
         android:text="Guilherme Miranda"
         android:textColor="@color/primary_dark"
-        android:textSize="22sp"
+        android:textSize="24sp"
         android:fontFamily="@font/roboto_bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/profilePicture" />
 
     <!-- Menu Icon -->
-    <ImageView
-        android:id="@+id/menuIcon"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_marginEnd="16dp"
-        android:src="@drawable/hamburger_menu"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:ignore="ContentDescription"/>
+<!--    <ImageView-->
+<!--        android:id="@+id/menuIcon"-->
+<!--        android:layout_width="32dp"-->
+<!--        android:layout_height="32dp"-->
+<!--        android:layout_marginEnd="16dp"-->
+<!--        android:src="@drawable/hamburger_menu"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        tools:ignore="ContentDescription"/>-->
 
     <!-- RecyclerView for Persona Cards -->
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/personaRecyclerView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="447dp"
         android:layout_marginTop="16dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/userName"
         app:layout_constraintBottom_toTopOf="@id/buttonsLayout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/userName"
+        app:layout_constraintVertical_bias="0.253"
         tools:listitem="@layout/item_persona_card" />
 
-    <!-- Bottom Buttons Layout -->
+    <!-- Bottom Navigation View -->
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:menu="@menu/bottom_navigation_menu"
+        android:background="@color/primary_light_20"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:itemIconTint="@drawable/bottom_navigation_selector"
+        app:labelVisibilityMode="labeled"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:foreground="?attr/selectableItemBackground"
+
+        >
+
+        <Button
+            android:id="@+id/searchChatButton"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/primary_dark"
+            android:drawable="@drawable/rounded_button_background_accent"
+            android:text="Search Chat"
+            android:textColor="@color/background_light">
+
+        </Button>
+    </com.google.android.material.bottomnavigation.BottomNavigationView>
+
     <LinearLayout
         android:id="@+id/buttonsLayout"
         android:layout_width="0dp"
@@ -70,29 +102,26 @@
         android:gravity="center"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:itemTextAppearanceActive="@style/ActiveMenuText"
+        app:itemTextAppearanceInactive="@style/InactiveMenuText"
+        >
 
         <!-- Create New Chat Button -->
-        <Button
-            android:id="@+id/createNewChatButton"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="48dp"
-            android:layout_marginEnd="8dp"
-            android:text="Create Chat"
-            android:textColor="@color/background_light"
-            android:background="@drawable/rounded_button_background_primary"
- />
 
         <!-- Search Chat Button -->
         <Button
-            android:id="@+id/searchChatButton"
+
+            android:id="@+id/createNewChatButton"
             android:layout_width="0dp"
-            android:layout_weight="1"
             android:layout_height="48dp"
-            android:text="Search Chat"
-            android:textColor="@color/background_light"
-            android:background="@drawable/rounded_button_background_accent" />
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/primary_dark"
+            android:drawable="@drawable/rounded_button_background_accent"
+            android:text="Create Chat"
+            android:textColor="@color/background_light" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

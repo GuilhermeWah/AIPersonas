@@ -1,4 +1,6 @@
+
 <resources>
+
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
@@ -10,6 +12,7 @@
     <color name="buttonText">#000000</color>
     <color name="statusTag">#81C784</color>
     <color name="inputBorder">#A0A0A0</color>
+
 
 
     <!--  Additional colors for new layout  -->
@@ -51,6 +54,21 @@
     <color name="accent_dark_light_40">#AD8A74</color> <!-- 40% opacity -->
     <color name="accent_dark_light_20">#CDAA93</color> <!-- 20% opacity -->
 
+    <color name="rippleColor">@color/accent_light_20</color>
+
+    <style name="BottomNavigationStyle" parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="itemIconSize">28dp</item>
+        <item name="itemTextColor">@drawable/bottom_navigation_selector</item>
+        <item name="backgroundTint">@color/background_light</item>
+    </style>
+
+    <style name="ActiveMenuText" parent="TextAppearance.AppCompat.Medium">
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="InactiveMenuText" parent="TextAppearance.AppCompat.Small">
+        <item name="android:textSize">12sp</item>
+    </style>
 
 
 </resources>

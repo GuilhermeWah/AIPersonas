@@ -62,7 +62,7 @@ OK ==>  **Persona Creation Feature**: Allow users to create custom personas thro
 ------  **GTP API Integration**: Connect with OpenAI GPT to provide meaningful responses by personas during chat sessions.
 OK ===> **Favorite/Delete Persona Feature**: Complete the implementation for long press actions on persona cards to favorite or delete.
 
-
+Ver1. Room
 #Architecture Database :
 Users (Collection)
 └── UserID (Document - based on uid)

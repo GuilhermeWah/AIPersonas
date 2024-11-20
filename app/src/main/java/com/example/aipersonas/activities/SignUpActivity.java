@@ -1,5 +1,6 @@
 package com.example.aipersonas.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -80,14 +81,17 @@ public class SignUpActivity extends AppCompatActivity {
 
                             // Create a user map
                             Map<String, Object> userMap = new HashMap<>();
+                            userMap.put("name", fullName);
+                            userMap.put("email", email);
                             userMap.put("userId", userId);
-                            userMap.put("email", email);  // Any other user data you wish to save
 
                             // Save the user in Firestore under "Users" collection
                             db.collection("Users").document(userId)
                                     .set(userMap)
                                     .addOnSuccessListener(aVoid -> {
                                         Log.d("Firestore", "User successfully added to Firestore");
+                                        startActivity(new Intent(SignUpActivity.this, MainActivity.class));
+                                        finish();
                                     })
                                     .addOnFailureListener(e -> {
                                         Log.w("Firestore", "Error adding user", e);

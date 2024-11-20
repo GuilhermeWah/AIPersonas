@@ -6,6 +6,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.SearchView;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
@@ -14,12 +16,15 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
-
 import com.example.aipersonas.R;
+
 import com.example.aipersonas.adapters.PersonaAdapter;
 import com.example.aipersonas.models.Persona;
 import com.example.aipersonas.repositories.PersonaRepository;
+import com.example.aipersonas.repositories.UserRepository;
 import com.example.aipersonas.viewmodels.PersonaViewModel;
+import com.example.aipersonas.viewmodels.UserViewModel;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,8 +36,11 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
     private Button createNewChatButton;
     private Button searchChatButton;
     private PersonaRepository personaRepository;
-
+    private BottomNavigationView bottomNavigationView;
     private PersonaViewModel personaViewModel;
+    private UserViewModel userViewModel;
+    private UserRepository userRepository;
+    private SearchView searchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +77,15 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
         );
         personaRecyclerView.setAdapter(personaAdapter);*/
 
+        userViewModel = new ViewModelProvider(this).get(UserViewModel.class);
+        userViewModel.getUser().observe(this, user -> {
+                   if(user != null) {
+                       TextView userNameTextView = findViewById(R.id.userName);
+                       userNameTextView.setText(user.getName());
+                   }
+                });
+
+
         // VIEWMODEL TO UPDATE IN REAL TIME CHANGES ON THE DATA AND UI
         // Initialize ViewModel
         personaViewModel = new ViewModelProvider(this).get(PersonaViewModel.class);
@@ -77,6 +94,35 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
         personaViewModel.getAllPersonas().observe(this, personas -> {
             if (personas != null) {
                 personaAdapter.setPersonaList(personas);
+            }
+        });
+
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
+
+        bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
+            String title = item.getTitle().toString();
+            switch (title) {
+                case "Profile":
+                    //startActivity(new Intent(MainActivity.this, ProfileActivity.class));
+                    Toast.makeText(this, "Profile Selected", Toast.LENGTH_SHORT).show();
+                    return true;
+
+                case "Home":
+                    //startActivity(new Intent(MainActivity.this, ChatListActivity.class));
+                    Toast.makeText(this, "Home Selected", Toast.LENGTH_SHORT).show();
+                    return true;
+
+                case "Create Chat":
+                    showCreateChatDialog();
+
+                    return true;
+
+                case "Search":
+                    Toast.makeText(this, "Search Selected", Toast.LENGTH_SHORT).show();
+                    return true;
+
+                default:
+                    return false;
             }
         });
 

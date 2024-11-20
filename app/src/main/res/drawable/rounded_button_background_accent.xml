@@ -1,4 +1,5 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="@color/accent_color" />
-    <corners android:radius="24dp" />
+    <solid android:color="@color/primary_light_20"/>
+    <corners android:radius="45dp"/>
+    <stroke android:width="2dp" android:color="@color/accent_color"/>
 </shape>

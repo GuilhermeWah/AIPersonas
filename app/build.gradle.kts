@@ -35,6 +35,7 @@ android {
     }
 }
 
+
 dependencies {
     // AndroidX dependencies
     implementation("androidx.appcompat:appcompat:1.5.1")
@@ -60,7 +61,12 @@ dependencies {
     implementation("androidx.room:room-ktx:2.4.3")
     annotationProcessor("androidx.room:room-compiler:2.4.3") // For Java-based projects
 
+    //Icons
+    implementation ("com.google.android.material:material:1.9.0")
 
+    //Testing Room db Stetho
+
+ 
     // Test Dependencies
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.4")

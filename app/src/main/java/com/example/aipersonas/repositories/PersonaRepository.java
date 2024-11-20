@@ -73,7 +73,8 @@ private void fetchPersonasFromFirestore() {
             .get()
             .addOnSuccessListener(queryDocumentSnapshots -> {
                 executor.execute(() -> {
-                    // Clear old data to avoid duplication
+                    // Clear old data to avoid duplication --
+                    // not sure if it is smart tho!  seems to overwhelm the db
                     personaDAO.deleteAll();
 
                     // data we fetched is inserted on room; sync online and offline

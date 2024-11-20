@@ -1,12 +1,5 @@
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <shape android:shape="oval">
-            <solid android:color="@color/primary_light_20" />
-        </shape>
-    </item>
-    <item android:right="4dp" android:bottom="4dp">
-        <shape android:shape="oval">
-            <solid android:color="@color/background_light" />
-        </shape>
-    </item>
-</layer-list>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="@color/white" />
+    <corners android:radius="45dp" />
+    <stroke android:width="2dp" android:color="@color/primary_dark" />
+</shape>

@@ -12,7 +12,11 @@
     <style name="HeaderTextStyle">
         <item name="android:fontFamily">roboto_bold</item>
         <item name="android:textSize">24sp</item>
+    </style>
 
+    <style name="InputTextStyle">
+        <item name="android:fontFamily">@font/roboto_regular</item>
+        <item name="android:textSize">16sp</item>
     </style>
 
     <!-- Body Text Style (e.g., Chat Messages) (Following Ana's Sketch) -->

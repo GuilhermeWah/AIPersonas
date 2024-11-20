@@ -38,5 +38,5 @@ public class PersonaViewModel extends AndroidViewModel {
         return personaRepository.getPersonaById(personaId);
     }
 
-    // Similarly, you can add update and delete methods if required.
+
 }
