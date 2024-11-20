@@ -2,6 +2,7 @@ package com.example.aipersonas.models;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import java.util.UUID;
@@ -15,6 +16,7 @@ public class Persona {
     private String description;
 
     // Empty constructor for Firestore serialization
+    @Ignore
     public Persona() {
         this.personaId = UUID.randomUUID().toString(); // Manually generate ID
     }

@@ -12,49 +12,34 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.aipersonas.viewmodels.ChatListViewModel;
+import com.example.aipersonas.viewmodels.ChatListViewModelFactory;
+import com.example.aipersonas.viewmodels.PersonaViewModel;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.Timestamp;
+import java.util.Date;
+
 import com.example.aipersonas.R;
 import com.example.aipersonas.adapters.ChatListAdapter;
 import com.example.aipersonas.models.Chat;
 import com.example.aipersonas.models.Persona;
-import com.example.aipersonas.viewmodels.ChatListViewModel;
-import com.example.aipersonas.viewmodels.ChatViewModelFactory;
-import com.example.aipersonas.viewmodels.PersonaViewModel;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
-
-import java.util.Date;
 
 public class ChatListActivity extends AppCompatActivity implements ChatListAdapter.OnChatClickListener {
 
-    private static final String TAG = "ChatListActivity";
     private RecyclerView chatListRecyclerView;
     private ChatListViewModel chatListViewModel;
     private PersonaViewModel personaViewModel;
     private ChatListAdapter chatListAdapter;
     private Persona currentPersona;
     private FloatingActionButton addChatButton;
+    private FirebaseAuth auth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.chat_list_activity);
 
-        setupToolbar();
-
-        String personaId = getIntent().getStringExtra("personaId");
-        if (personaId == null) {
-            Toast.makeText(this, "Persona not found", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-
-        setupRecyclerView();
-        setupViewModels(personaId);
-        setupAddChatButton(personaId);
-    }
-
-    private void setupToolbar() {
         Toolbar toolbar = findViewById(R.id.chat_list_toolbar);
         setSupportActionBar(toolbar);
 
@@ -62,43 +47,55 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setTitle("Persona Chats");
         }
-    }
 
-    private void setupRecyclerView() {
+        auth = FirebaseAuth.getInstance();
+        String userId = auth.getCurrentUser().getUid();
+
         chatListRecyclerView = findViewById(R.id.chat_list_recyclerview);
         chatListAdapter = new ChatListAdapter(this);
         chatListRecyclerView.setAdapter(chatListAdapter);
         chatListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-    }
 
-    private void setupViewModels(String personaId) {
-        ChatViewModelFactory factory = new ChatViewModelFactory(getApplication(), personaId);
-        chatListViewModel = new ViewModelProvider(this, factory).get(ChatListViewModel.class);
+        // Get personaId from the intent
+        String personaId = null;
 
-        personaViewModel = new ViewModelProvider(this).get(PersonaViewModel.class);
-        personaViewModel.getPersonaById(personaId).observe(this, persona -> {
-            if (persona != null) {
-                currentPersona = persona;
-                Log.d(TAG, "Current Persona set: " + currentPersona.getName());
-            } else {
-                Toast.makeText(this, "Failed to load persona details.", Toast.LENGTH_SHORT).show();
-            }
-        });
+        if (getIntent().hasExtra("personaId")) {
+            personaId = getIntent().getStringExtra("personaId");
 
-        chatListViewModel.getChatsForPersona(personaId).observe(this, chats -> {
-            chatListAdapter.setChatList(chats);
-        });
-    }
+            // Use ChatViewModelFactory to create ChatViewModel
+            ChatListViewModelFactory factory = new ChatListViewModelFactory(getApplication(), personaId);
+            chatListViewModel = new ViewModelProvider(this, factory).get(ChatListViewModel.class);
 
-    private void setupAddChatButton(String personaId) {
+            personaViewModel = new ViewModelProvider(this).get(PersonaViewModel.class);
+            personaViewModel.getPersonaById(personaId).observe(this, persona -> {
+                if (persona != null) {
+                    currentPersona = persona;
+                    Log.d("ChatListActivity", "Current Persona set: " + currentPersona.getName());
+                } else {
+                    Toast.makeText(this, "Failed to load persona details.", Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+        // Add log here to verify if personaId is received correctly
+        Log.d("ChatListActivity", "Persona ID received: " + personaId);
+
+        if (personaId != null) {
+            chatListViewModel = new ViewModelProvider(this).get(ChatListViewModel.class);
+            chatListViewModel.getChatsForPersona(personaId).observe(this, chats -> {
+                chatListAdapter.setChatList(chats);
+            });
+        } else {
+            // Handle null personaId scenario
+            Toast.makeText(this, "Persona not found", Toast.LENGTH_SHORT).show();
+        }
+
         addChatButton = findViewById(R.id.add_chat_fab);
+
         addChatButton.setOnClickListener(v -> {
             if (currentPersona != null) {
-                FirebaseAuth auth = FirebaseAuth.getInstance();
-                String userId = auth.getCurrentUser().getUid();
-
+                // Create a new chat here
                 Chat newChat = new Chat(userId, currentPersona.getPersonaId(), currentPersona.getName(), "New Chat", new Timestamp(new Date()));
-                chatListViewModel.insert(newChat, personaId);
+                chatListViewModel.insert(newChat, currentPersona.getPersonaId());
 
                 Toast.makeText(ChatListActivity.this, "Chat added successfully!", Toast.LENGTH_SHORT).show();
             } else {
@@ -109,18 +106,22 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        // verify if the user clicked the back button
         if (item.getItemId() == android.R.id.home) {
-            finish();
+            finish(); // close the current activity to go back to the previous one
             return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
+    // Implementing the logic to open the selected chat when clicked on the chat item
+    // We are using the interface ChatListAdapter.OnChatClickListener to handle this
     @Override
     public void onChatClick(Chat chat) {
+        // logic to open the selected chat
         Intent intent = new Intent(this, ChatActivity.class);
-        intent.putExtra("chatId", chat.getChatId());
-        intent.putExtra("personaId", chat.getPersonaId());
+        intent.putExtra("chatId", chat.getChatId()); // Pass the chatId to the ChatActivity
+        intent.putExtra("personaId", chat.getPersonaId()); // Pass the personaId to the ChatActivity
         startActivity(intent);
     }
 }

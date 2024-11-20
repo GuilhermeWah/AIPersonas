@@ -2,6 +2,7 @@ package com.example.aipersonas.models;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 import androidx.room.TypeConverters;
 
@@ -16,7 +17,7 @@ public class Chat {
 
     @PrimaryKey
     @NonNull
-    private String chatId; // Preexisting or newly generated UUID
+    private String chatId;
     private String userId;
     private String personaId;
     private String personaTitle;
@@ -24,11 +25,22 @@ public class Chat {
     private Timestamp timestamp;
 
     // Empty constructor for Firestore serialization
+    @Ignore
     public Chat() {
-        // No initialization logic here to avoid accidental ID mismatches
     }
 
-    // Constructor for creating new Chat objects
+    // Default constructor for Room
+    public Chat(@NonNull String chatId, String userId, String personaId, String personaTitle, String lastMessage, Timestamp timestamp) {
+        this.chatId = chatId;
+        this.userId = userId;
+        this.personaId = personaId;
+        this.personaTitle = personaTitle;
+        this.lastMessage = lastMessage;
+        this.timestamp = timestamp;
+    }
+
+    // Constructor for new Chat objects
+    @Ignore
     public Chat(@NonNull String userId, String personaId, String personaTitle, String lastMessage, Timestamp timestamp) {
         this.chatId = UUID.randomUUID().toString();
         this.userId = userId;
@@ -38,23 +50,14 @@ public class Chat {
         this.timestamp = timestamp;
     }
 
-    // Constructor for preexisting Chat objects (e.g., syncing from Firestore)
-    public Chat(@NonNull String chatId, String userId, String personaId, String personaTitle, String lastMessage, Timestamp timestamp) {
-        this.chatId = chatId;
-        this.userId = userId;
-        this.personaId = personaId;
-        this.personaTitle = personaTitle;
-        this.lastMessage = lastMessage;
-        this.timestamp = timestamp;
-    }
-     // Overloading the constructor once again, so that we can use the insert in the chat repo
+    // Constructor for preexisting Chat objects
+    @Ignore
     public Chat(String chatId, String personaId, String message) {
         this.chatId = chatId;
         this.personaId = personaId;
         this.lastMessage = message;
-        this.timestamp = Timestamp.now(); // Assign current timestamp
+        this.timestamp = Timestamp.now();
     }
-
 
     @NonNull
     public String getChatId() {

@@ -102,14 +102,14 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
             String title = item.getTitle().toString();
             switch (title) {
-                case "Profile":
-                    //startActivity(new Intent(MainActivity.this, ProfileActivity.class));
-                    Toast.makeText(this, "Profile Selected", Toast.LENGTH_SHORT).show();
+                case "Settings":
+                    startActivity(new Intent(MainActivity.this, UserSettings.class));
+                    //Toast.makeText(this, "Profile Selected", Toast.LENGTH_SHORT).show();
                     return true;
 
                 case "Home":
-                    //startActivity(new Intent(MainActivity.this, ChatListActivity.class));
-                    Toast.makeText(this, "Home Selected", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(MainActivity.this, ChatListActivity.class));
+                   // Toast.makeText(this, "Home Selected", Toast.LENGTH_SHORT).show();
                     return true;
 
                 case "Create Chat":
@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
                     return true;
 
                 case "Search":
-                    Toast.makeText(this, "Search Selected", Toast.LENGTH_SHORT).show();
+                   // Toast.makeText(this, "Search Selected", Toast.LENGTH_SHORT).show();
                     return true;
 
                 default:
