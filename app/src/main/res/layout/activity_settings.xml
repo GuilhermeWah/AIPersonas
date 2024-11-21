@@ -140,7 +140,7 @@
         <!-- Delete Account Button -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/logOutButton"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
@@ -152,7 +152,7 @@
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/deleteAccountButton"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@drawable/rounded_button_background_accent"
@@ -164,7 +164,7 @@
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/updateButton"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
