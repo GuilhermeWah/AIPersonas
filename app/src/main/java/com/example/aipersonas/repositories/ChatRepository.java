@@ -249,20 +249,24 @@ public class ChatRepository {
 
 
     public void sendMessageToGPT(String message, String personaId, String chatId, String gptKey, ApiCallback callback) {
+        Log.d("ChatRepository", "sendMessageToGPT called with message: " + message);
         String apiUrl = "https://api.openai.com/v1/completions";
         String requestBody = buildGPTRequestBody(message);
+        Log.d("ChatRepository", "Request Body: " + requestBody);
 
         sendHttpRequest(apiUrl, gptKey, requestBody, new ApiCallback() {
             @Override
             public void onSuccess(String response) {
+                Log.d("ChatRepository", "HTTP request successful, response: " + response);
                 callback.onSuccess(response);
             }
 
             @Override
             public void onFailure(String error) {
+                Log.e("ChatRepository", "HTTP request failed, error: " + error);
                 callback.onFailure(error);
             }
-        });
-    }
+        });}
 }
+
 
