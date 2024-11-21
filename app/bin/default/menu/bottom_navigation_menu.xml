@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_home"
+        android:icon="@android:drawable/ic_menu_myplaces"
+        android:title="Home" />
+    <item
+        android:id="@+id/nav_chats"
+        android:icon="@android:drawable/ic_input_add"
+        android:title="Create Chat" />
+    <item
+        android:id="@+id/nav_search"
+        android:icon="@android:drawable/ic_search_category_default"
+        android:title="Search" />
+    <item
+        android:id="@+id/nav_profile"
+        android:icon="@android:drawable/ic_menu_report_image"
+        android:title="Settings" />
+</menu>
