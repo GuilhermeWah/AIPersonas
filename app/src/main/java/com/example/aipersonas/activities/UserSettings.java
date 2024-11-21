@@ -63,8 +63,11 @@ public class UserSettings extends AppCompatActivity {
         firestore.collection("Users").document(userId).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
-                        userName.setText(documentSnapshot.getString("name"));
-                        statusText.setText("Status: " + documentSnapshot.getString("status"));
+                        String firstName = documentSnapshot.getString("firstName");
+                        String lastName = documentSnapshot.getString("lastName");
+                        String fullName = firstName + " " + lastName;
+                        userName.setText(fullName);
+                      //  statusText.setText("Status: " + documentSnapshot.getString("status"));
 
                     } else {
                         Toast.makeText(this, "User details not found", Toast.LENGTH_SHORT).show();
