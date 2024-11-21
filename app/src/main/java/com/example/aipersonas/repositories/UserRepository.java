@@ -79,7 +79,7 @@ public class UserRepository {
                     .document(userId)
                     .set(user) // Update Firestore
                     .addOnFailureListener(e -> {
-                        e.printStackTrace(); // Log errors
+                        e.printStackTrace(); // Log errorg
                     });
         });
     }

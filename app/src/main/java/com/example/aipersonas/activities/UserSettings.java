@@ -11,6 +11,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.aipersonas.R;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -94,13 +96,44 @@ public class UserSettings extends AppCompatActivity {
     }
 
     //@TODO: Delegate this to the repository, maybe UserRepo;
+    //@TODO: Delete the whole collection + subcollections;
     private void deleteAccount() {
         String userId = auth.getCurrentUser().getUid();
-        firestore.collection("Users").document(userId).delete()
+
+        // Step 1: Delete Firestore user document along with subcollections
+        firestore.collection("Users").document(userId)
+                .delete()
                 .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Account deleted", Toast.LENGTH_SHORT).show();
-                    finish();
+                    // Step 2: Delete Firebase Authentication record
+                    deleteFirebaseAuthUser();
                 })
-                .addOnFailureListener(e -> Toast.makeText(this, "Failed to delete account", Toast.LENGTH_SHORT).show());
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to delete Firestore data", Toast.LENGTH_SHORT).show();
+                    e.printStackTrace();
+                });
     }
+
+    // Helper method to delete the Firebase Authentication account
+    private void deleteFirebaseAuthUser() {
+        if (auth.getCurrentUser() != null) {
+            auth.getCurrentUser().delete()
+                    .addOnSuccessListener(unused -> {
+                        Toast.makeText(this, "Account deleted successfully", Toast.LENGTH_SHORT).show();
+                        redirectToSignIn();
+                    })
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(this, "Failed to delete authentication record. Please try again.", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    });
+        }
+    }
+
+    // Redirect to sign-in activity after deletion
+    private void redirectToSignIn() {
+        Intent intent = new Intent(this, SignInActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
+    }
+
 }

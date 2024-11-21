@@ -72,12 +72,10 @@ public class ChatActivity extends AppCompatActivity {
 
         // Handle send button click
         sendButton.setOnClickListener(v -> {
-            String message = messageInput.getText().toString().trim();
+            String message = messageInput.getText().toString();
             if (!message.isEmpty()) {
-                sendMessage(message);
-                messageInput.setText(""); // Clear input after sending
-            } else {
-                Toast.makeText(this, "Message cannot be empty", Toast.LENGTH_SHORT).show();
+                chatViewModel.sendMessage(message, personaId, chatId);
+                messageInput.setText("");
             }
         });
     }
@@ -110,7 +108,7 @@ public class ChatActivity extends AppCompatActivity {
         // Save message via ViewModel
         chatViewModel.insert(chat, personaId);
 
-        //
-        // chatViewModel.sendMessageToGPT(messageContent, personaId, chatId, apiKey, callback);
+        String apiKey = chatViewModel.getGPTKeyLiveData().getValue();
+        chatViewModel.sendMessage(messageContent, personaId, chatId);
     }
 }

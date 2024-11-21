@@ -213,12 +213,7 @@ public class ChatRepository {
 
     private void sendHttpRequest(String apiUrl, String apiKey, String requestBody, ApiCallback callback) {
         OkHttpClient client = new OkHttpClient();
-
-        RequestBody body = RequestBody.create(
-                requestBody,
-                MediaType.parse("application/json")
-        );
-
+        RequestBody body = RequestBody.create(requestBody, MediaType.parse("application/json"));
         Request request = new Request.Builder()
                 .url(apiUrl)
                 .addHeader("Authorization", "Bearer " + apiKey)
@@ -227,17 +222,16 @@ public class ChatRepository {
 
         client.newCall(request).enqueue(new Callback() {
             @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
+            public void onFailure(Call call, IOException e) {
                 callback.onFailure(e.getMessage());
             }
 
             @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if (response.isSuccessful() && response.body() != null) {
-                    String responseData = response.body().string();
-                    callback.onSuccess(responseData);
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    callback.onSuccess(response.body().string());
                 } else {
-                    callback.onFailure("Failed with status code: " + response.code());
+                    callback.onFailure(response.message());
                 }
             }
         });

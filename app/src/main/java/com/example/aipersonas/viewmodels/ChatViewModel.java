@@ -68,12 +68,12 @@ public class ChatViewModel extends AndroidViewModel {
                     public void onSuccess(String response) {
                         Log.d(TAG, "GPT Response: " + response);
 
-                        // Add GPT response as a new chat message
+                        // Adiciona a resposta do GPT como uma nova mensagem de chat
                         Chat responseChat = new Chat(
-                                personaId,           // Persona ID
-                                chatId,             // Chat ID
-                                "GPT",             // Persona title
-                                response,         // Message content
+                                personaId,           // ID da Persona
+                                chatId,             // ID do Chat
+                                "GPT",             // Título da Persona
+                                response,         // Conteúdo da Mensagem
                                 Timestamp.now()  // Timestamp
                         );
                         chatRepository.insert(responseChat, personaId);
