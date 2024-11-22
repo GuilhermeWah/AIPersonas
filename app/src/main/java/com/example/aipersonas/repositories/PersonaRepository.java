@@ -1,7 +1,10 @@
 package com.example.aipersonas.repositories;
 
+import static android.content.ContentValues.TAG;
+
 import com.example.aipersonas.utils.NetworkUtils;
 import android.app.Application;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 
@@ -53,6 +56,7 @@ public class PersonaRepository {
         void onFailure(Exception e);
     }
 
+
     // this method returns all the personas from the roomDB
     public LiveData<List<Persona>> getAllPersonas() {
         return allPersonas; // Data is sourced from Room, which acts as the local cache
@@ -73,7 +77,8 @@ private void fetchPersonasFromFirestore() {
             .get()
             .addOnSuccessListener(queryDocumentSnapshots -> {
                 executor.execute(() -> {
-                    // Clear old data to avoid duplication
+                    // Clear old data to avoid duplication --
+                    // not sure if it is smart tho!  seems to overwhelm the db
                     personaDAO.deleteAll();
 
                     // data we fetched is inserted on room; sync online and offline
@@ -89,7 +94,58 @@ private void fetchPersonasFromFirestore() {
             });
 }
 
+    public void updatePersonaDescription(String personaId, String tailoredDescription, String originalDescription) {
+        Log.d(TAG, "Updating persona description in Firestore and Room: " + tailoredDescription);
 
+        // Update the descriptions in Firestore
+        firebaseFirestore.collection("Users")
+                .document(userId)
+                .collection("Personas")
+                .document(personaId)
+                .update(
+                        "userDescription", originalDescription,
+                        "gptDescription", tailoredDescription
+                )
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Persona descriptions updated successfully in Firestore."))
+                .addOnFailureListener(e -> Log.e(TAG, "Error updating persona descriptions in Firestore: ", e));
+
+        executor.execute(() -> {
+            Persona persona = personaDAO.getPersonaByIdSync(personaId);
+            if (persona != null) {
+                persona.setDescription(originalDescription);
+                persona.setGptDescription(tailoredDescription);
+                personaDAO.update(persona);
+                Log.d(TAG, "Persona descriptions updated successfully in Room.");
+            } else {
+                Log.e(TAG, "Persona not found in Room with ID: " + personaId);
+            }
+        });
+    }
+
+    public void storePersonaDescription(String personaId, String tailoredDescription) {
+        Log.d(TAG, "Storing tailored persona description in Firestore and Room: " + tailoredDescription);
+
+        // Update Firestore
+        firebaseFirestore.collection("Users")
+                .document(userId)
+                .collection("Personas")
+                .document(personaId)
+                .update("description", tailoredDescription)
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Persona description stored successfully in Firestore."))
+                .addOnFailureListener(e -> Log.e(TAG, "Error storing persona description in Firestore: ", e));
+
+        // Update Room
+        executor.execute(() -> {
+            Persona persona = personaDAO.getPersonaByIdSync(personaId);
+            if (persona != null) {
+                persona.setDescription(tailoredDescription);
+                personaDAO.update(persona);
+                Log.d(TAG, "Persona description stored successfully in Room.");
+            } else {
+                Log.e(TAG, "Persona not found in Room with ID: " + personaId);
+            }
+        });
+    }
 
     // Method to insert a Persona
     public void insert(Persona persona) {

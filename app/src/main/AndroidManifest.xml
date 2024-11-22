@@ -7,7 +7,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
-
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -17,6 +16,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AIPersonas"
         tools:targetApi="31">
+        <activity
+            android:name=".activities.UserSettings"
+            android:exported="false" />
+        <activity
+            android:name=".activities.SplashActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".activities.ChatActivity"
             android:exported="false" />
@@ -34,24 +45,16 @@
             android:exported="true" />
         <activity
             android:name=".activities.SignUpActivity"
-            android:exported="true">
-
-        </activity>
-
-        <activity android:name=".activities.ChatListActivity"
-            android:exported="true"
-           />
-
-        <!-- Google Play Services metadata -->
+            android:exported="true"></activity>
+        <activity
+            android:name=".activities.ChatListActivity"
+            android:exported="true" /> <!-- Google Play Services metadata -->
         <meta-data
             android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version" />
-
-        <!-- Firebase services -->
+            android:value="@integer/google_play_services_version" /> <!-- Firebase services -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/ic_send_icon" />
-
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="default_channel" />

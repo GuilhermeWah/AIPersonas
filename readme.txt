@@ -62,7 +62,7 @@ OK ==>  **Persona Creation Feature**: Allow users to create custom personas thro
 ------  **GTP API Integration**: Connect with OpenAI GPT to provide meaningful responses by personas during chat sessions.
 OK ===> **Favorite/Delete Persona Feature**: Complete the implementation for long press actions on persona cards to favorite or delete.
 
-
+Ver1. Room
 #Architecture Database :
 Users (Collection)
 └── UserID (Document - based on uid)
@@ -169,6 +169,17 @@ We built the logic for creating new chats tied to a persona:
 Users can now click on a persona and initiate a chat. The persona’s name and ID are properly passed into ChatActivity.
 Updated the Chat model to make sure it has everything it needs—like the persona title and ID.
 We added a basic check to make sure users can only create a chat if all the required persona details are provided.
+
+
+Firestore Root
+└── config (Collection)
+    └── apiKeys (Document)
+        ├── gptApiKey: String
+
+
+I just overloaded the constructor for preexisting Chat objects (e.g., syncing from Firestore)
+This way we can sync between both our dbs.
+
 
 ## Contributors
 - Guilherme Miranda (Developer & Project Lead)

@@ -1,5 +1,6 @@
 package com.example.aipersonas.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -20,7 +21,7 @@ import java.util.Map;
 
 public class SignUpActivity extends AppCompatActivity {
 
-    private EditText etFullName, etEmail, etPassword, etConfirmPassword;
+    private EditText etFirstName, etLastName, etEmail, etPassword, etConfirmPassword;
     private Button btnSignUp;
     private TextView tvSignInLink;
     private FirebaseAuth mAuth;
@@ -33,7 +34,8 @@ public class SignUpActivity extends AppCompatActivity {
 
 
         // Initialize UI elements
-        etFullName = findViewById(R.id.etFullName);
+        etFirstName = findViewById(R.id.etFirstName);
+        etLastName = findViewById(R.id.etLastName);
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         etConfirmPassword = findViewById(R.id.etConfirmPassword);
@@ -58,12 +60,13 @@ public class SignUpActivity extends AppCompatActivity {
     }
 
     private void handleSignUp() {
-        String fullName = etFullName.getText().toString().trim();
+        String firstName = etFirstName.getText().toString().trim();
+        String lastName = etLastName.getText().toString().trim();
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
         String confirmPassword = etConfirmPassword.getText().toString().trim();
 
-        if (validateInput(fullName, email, password, confirmPassword)) {
+        if (validateInput(firstName,lastName, email, password, confirmPassword)) {
             // Proceed with Firebase Authentication sign-up
 
             mAuth = FirebaseAuth.getInstance();
@@ -80,14 +83,18 @@ public class SignUpActivity extends AppCompatActivity {
 
                             // Create a user map
                             Map<String, Object> userMap = new HashMap<>();
+                            userMap.put("firstName", firstName);
+                            userMap.put("lastName", lastName); // Set last name to empty string)
+                            userMap.put("email", email);
                             userMap.put("userId", userId);
-                            userMap.put("email", email);  // Any other user data you wish to save
 
                             // Save the user in Firestore under "Users" collection
                             db.collection("Users").document(userId)
                                     .set(userMap)
                                     .addOnSuccessListener(aVoid -> {
                                         Log.d("Firestore", "User successfully added to Firestore");
+                                        startActivity(new Intent(SignUpActivity.this, MainActivity.class));
+                                        finish();
                                     })
                                     .addOnFailureListener(e -> {
                                         Log.w("Firestore", "Error adding user", e);
@@ -105,11 +112,16 @@ public class SignUpActivity extends AppCompatActivity {
         }
     }
 
-    private boolean validateInput(String fullName, String email, String password, String confirmPassword) {
-        if (TextUtils.isEmpty(fullName)) {
-            etFullName.setError(getString(R.string.error_full_name_required));
+    private boolean validateInput(String firstName, String lastName, String email, String password, String confirmPassword) {
+        if (TextUtils.isEmpty(firstName)) {
+            etFirstName.setError(getString(R.string.error_full_name_required));
             return false;
         }
+        if (TextUtils.isEmpty(lastName)) {
+            etLastName.setError(getString(R.string.error_full_name_required));
+            return false;
+        }
+
         if (TextUtils.isEmpty(email)) {
             etEmail.setError(getString(R.string.error_email_required));
             return false;

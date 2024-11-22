@@ -1,0 +1,7 @@
+<resources>
+    <dimen name="buttonCornerRadius">16dp</dimen>
+    <dimen name="buttonPadding">12dp</dimen>
+    <dimen name="avatarImageSize">80dp</dimen>
+    <dimen name="spacingSmall">8dp</dimen>
+    <dimen name="spacingLarge">16dp</dimen>
+</resources>
