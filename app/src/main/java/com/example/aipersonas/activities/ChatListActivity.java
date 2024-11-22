@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
-import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,7 +12,8 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.aipersonas.viewmodels.ChatViewModelFactory;
+import com.example.aipersonas.viewmodels.ChatListViewModel;
+import com.example.aipersonas.viewmodels.ChatListViewModelFactory;
 import com.example.aipersonas.viewmodels.PersonaViewModel;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.Timestamp;
@@ -23,20 +23,17 @@ import com.example.aipersonas.R;
 import com.example.aipersonas.adapters.ChatListAdapter;
 import com.example.aipersonas.models.Chat;
 import com.example.aipersonas.models.Persona;
-import com.example.aipersonas.repositories.ChatRepository;
-import com.example.aipersonas.viewmodels.ChatViewModel;
 import com.google.firebase.auth.FirebaseAuth;
 
 public class ChatListActivity extends AppCompatActivity implements ChatListAdapter.OnChatClickListener {
 
     private RecyclerView chatListRecyclerView;
-    private ChatViewModel chatViewModel;
+    private ChatListViewModel chatListViewModel;
     private PersonaViewModel personaViewModel;
     private ChatListAdapter chatListAdapter;
     private Persona currentPersona;
     private FloatingActionButton addChatButton;
     private FirebaseAuth auth;
-    private ChatRepository chatRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,12 +58,13 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
 
         // Get personaId from the intent
         String personaId = null;
+
         if (getIntent().hasExtra("personaId")) {
             personaId = getIntent().getStringExtra("personaId");
 
             // Use ChatViewModelFactory to create ChatViewModel
-            ChatViewModelFactory factory = new ChatViewModelFactory(getApplication(), personaId);
-            chatViewModel = new ViewModelProvider(this, factory).get(ChatViewModel.class);
+            ChatListViewModelFactory factory = new ChatListViewModelFactory(getApplication(), personaId);
+            chatListViewModel = new ViewModelProvider(this, factory).get(ChatListViewModel.class);
 
             personaViewModel = new ViewModelProvider(this).get(PersonaViewModel.class);
             personaViewModel.getPersonaById(personaId).observe(this, persona -> {
@@ -82,8 +80,8 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
         Log.d("ChatListActivity", "Persona ID received: " + personaId);
 
         if (personaId != null) {
-            chatViewModel = new ViewModelProvider(this).get(ChatViewModel.class);
-            chatViewModel.getChatsForPersona(personaId).observe(this, chats -> {
+            chatListViewModel = new ViewModelProvider(this).get(ChatListViewModel.class);
+            chatListViewModel.getChatsForPersona(personaId).observe(this, chats -> {
                 chatListAdapter.setChatList(chats);
             });
         } else {
@@ -97,7 +95,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
             if (currentPersona != null) {
                 // Create a new chat here
                 Chat newChat = new Chat(userId, currentPersona.getPersonaId(), currentPersona.getName(), "New Chat", new Timestamp(new Date()));
-                chatViewModel.insert(newChat, currentPersona.getPersonaId());
+                chatListViewModel.insert(newChat, currentPersona.getPersonaId());
 
                 Toast.makeText(ChatListActivity.this, "Chat added successfully!", Toast.LENGTH_SHORT).show();
             } else {
@@ -123,6 +121,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
         // logic to open the selected chat
         Intent intent = new Intent(this, ChatActivity.class);
         intent.putExtra("chatId", chat.getChatId()); // Pass the chatId to the ChatActivity
+        intent.putExtra("personaId", chat.getPersonaId()); // Pass the personaId to the ChatActivity
         startActivity(intent);
     }
 }

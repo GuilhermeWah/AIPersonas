@@ -1,0 +1,413 @@
+[1mdiff --git a/app/build.gradle.kts b/app/build.gradle.kts[m
+[1mindex 19445cc..8dc2cc8 100644[m
+[1m--- a/app/build.gradle.kts[m
+[1m+++ b/app/build.gradle.kts[m
+[36m@@ -1,3 +1,5 @@[m
+[32m+[m[32mimport org.jetbrains.kotlin.storage.CacheResetOnProcessCanceled.enabled[m
+[32m+[m
+ plugins {[m
+     id("com.android.application")[m
+     id("org.jetbrains.kotlin.android")[m
+[36m@@ -8,6 +10,9 @@[m [mandroid {[m
+     namespace = "com.example.aipersonas"[m
+     compileSdk = 34[m
+ [m
+[32m+[m
+[32m+[m
+[32m+[m
+     defaultConfig {[m
+         applicationId = "com.example.aipersonas"[m
+         minSdk = 24[m
+[36m@@ -33,16 +38,18 @@[m [mandroid {[m
+     kotlinOptions {[m
+         jvmTarget = "1.8"[m
+     }[m
+[32m+[m
+ }[m
+ [m
+[32m+[m
+ dependencies {[m
+     // AndroidX dependencies[m
+     implementation("androidx.appcompat:appcompat:1.5.1")[m
+     implementation("androidx.constraintlayout:constraintlayout:2.1.4")[m
+     implementation("androidx.activity:activity-ktx:1.5.1")[m
+ [m
+[31m-    // Material Components[m
+[31m-    implementation("com.google.android.material:material:1.6.1")[m
+[32m+[m[32m    // Material Components -> icons[m
+[32m+[m[32m    implementation ("com.google.android.material:material:1.9.0")[m
+ [m
+     // Firebase BOM (to manage versions of Firebase libraries consistently)[m
+     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))[m
+[36m@@ -58,9 +65,18 @@[m [mdependencies {[m
+     // Room Database[m
+     implementation("androidx.room:room-runtime:2.4.3")[m
+     implementation("androidx.room:room-ktx:2.4.3")[m
+[32m+[m[32m    implementation(libs.security.crypto)[m
+[32m+[m[32m    implementation(libs.activity)[m
+     annotationProcessor("androidx.room:room-compiler:2.4.3") // For Java-based projects[m
+ [m
+ [m
+[32m+[m
+[32m+[m[32m    //OkHttp Dependency[m
+[32m+[m[32m    implementation ("com.squareup.okhttp3:okhttp:4.11.0");[m
+[32m+[m
+[32m+[m[32m    //Aryan Animation Splashscreen[m
+[32m+[m[32m    implementation("com.airbnb.android:lottie:6.3.0")[m
+[32m+[m
+     // Test Dependencies[m
+     testImplementation("junit:junit:4.13.2")[m
+     androidTestImplementation("androidx.test.ext:junit:1.1.4")[m
+[1mdiff --git a/app/google-services.json b/app/google-services.json[m
+[1mindex c5d4bfd..c37edb4 100644[m
+[1m--- a/app/google-services.json[m
+[1m+++ b/app/google-services.json[m
+[36m@@ -15,7 +15,7 @@[m
+       "oauth_client": [],[m
+       "api_key": [[m
+         {[m
+[31m-          "current_key": "PUT OUR API KEY HERE"[m
+[32m+[m[32m          "current_key": "AIzaSyBLvEZLXJzgHMBgs7WKHKFJURKL3WDC718"[m
+         }[m
+       ],[m
+       "services": {[m
+[36m@@ -26,4 +26,4 @@[m
+     }[m
+   ],[m
+   "configuration_version": "1"[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/src/main/AndroidManifest.xml b/app/src/main/AndroidManifest.xml[m
+[1mindex c9212a9..7760651 100644[m
+[1m--- a/app/src/main/AndroidManifest.xml[m
+[1m+++ b/app/src/main/AndroidManifest.xml[m
+[36m@@ -7,7 +7,6 @@[m
+     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />[m
+ [m
+     <application[m
+[31m-[m
+         android:allowBackup="true"[m
+         android:dataExtractionRules="@xml/data_extraction_rules"[m
+         android:fullBackupContent="@xml/backup_rules"[m
+[36m@@ -17,6 +16,18 @@[m
+         android:supportsRtl="true"[m
+         android:theme="@style/Theme.AIPersonas"[m
+         tools:targetApi="31">[m
+[32m+[m[32m        <activity[m
+[32m+[m[32m            android:name=".activities.UserSettings"[m
+[32m+[m[32m            android:exported="false" />[m
+[32m+[m[32m        <activity[m
+[32m+[m[32m            android:name=".activities.SplashActivity"[m
+[32m+[m[32m            android:exported="true">[m
+[32m+[m[32m            <intent-filter>[m
+[32m+[m[32m                <action android:name="android.intent.action.MAIN" />[m
+[32m+[m
+[32m+[m[32m                <category android:name="android.intent.category.LAUNCHER" />[m
+[32m+[m[32m            </intent-filter>[m
+[32m+[m[32m        </activity>[m
+         <activity[m
+             android:name=".activities.ChatActivity"[m
+             android:exported="false" />[m
+[36m@@ -34,24 +45,16 @@[m
+             android:exported="true" />[m
+         <activity[m
+             android:name=".activities.SignUpActivity"[m
+[31m-            android:exported="true">[m
+[31m-[m
+[31m-        </activity>[m
+[31m-[m
+[31m-        <activity android:name=".activities.ChatListActivity"[m
+[31m-            android:exported="true"[m
+[31m-           />[m
+[31m-[m
+[31m-        <!-- Google Play Services metadata -->[m
+[32m+[m[32m            android:exported="true"></activity>[m
+[32m+[m[32m        <activity[m
+[32m+[m[32m            android:name=".activities.ChatListActivity"[m
+[32m+[m[32m            android:exported="true" /> <!-- Google Play Services metadata -->[m
+         <meta-data[m
+             android:name="com.google.android.gms.version"[m
+[31m-            android:value="@integer/google_play_services_version" />[m
+[31m-[m
+[31m-        <!-- Firebase services -->[m
+[32m+[m[32m            android:value="@integer/google_play_services_version" /> <!-- Firebase services -->[m
+         <meta-data[m
+             android:name="com.google.firebase.messaging.default_notification_icon"[m
+             android:resource="@drawable/ic_send_icon" />[m
+[31m-[m
+         <meta-data[m
+             android:name="com.google.firebase.messaging.default_notification_channel_id"[m
+             android:value="default_channel" />[m
+[1mdiff --git a/app/src/main/java/com/example/aipersonas/activities/ChatActivity.java b/app/src/main/java/com/example/aipersonas/activities/ChatActivity.java[m
+[1mindex 9e8f3a9..19085cf 100644[m
+[1m--- a/app/src/main/java/com/example/aipersonas/activities/ChatActivity.java[m
+[1m+++ b/app/src/main/java/com/example/aipersonas/activities/ChatActivity.java[m
+[36m@@ -1,70 +1,116 @@[m
+ package com.example.aipersonas.activities;[m
+ [m
+[31m-import android.content.Context;[m
+[31m-import android.net.ConnectivityManager;[m
+[31m-import android.net.Network;[m
+[31m-import android.net.NetworkInfo;[m
+[31m-import android.net.NetworkRequest;[m
+ import android.os.Bundle;[m
+[31m-import android.widget.Button;[m
+[32m+[m[32mimport android.util.Log;[m
+[32m+[m[32mimport android.widget.EditText;[m
+ import android.widget.ImageButton;[m
+[32m+[m[32mimport android.widget.Toast;[m
+ [m
+ import androidx.appcompat.app.AppCompatActivity;[m
+[32m+[m[32mimport androidx.lifecycle.ViewModelProvider;[m
+[32m+[m[32mimport androidx.recyclerview.widget.LinearLayoutManager;[m
+[32m+[m[32mimport androidx.recyclerview.widget.RecyclerView;[m
+ [m
+ import com.example.aipersonas.R;[m
+[31m-import com.google.android.material.snackbar.Snackbar;[m
+[32m+[m[32mimport com.example.aipersonas.adapters.MessageAdapter;[m
+[32m+[m[32mimport com.example.aipersonas.models.Chat;[m
+[32m+[m[32mimport com.example.aipersonas.models.Message;[m
+[32m+[m[32mimport com.example.aipersonas.repositories.ChatRepository;[m
+[32m+[m[32mimport com.example.aipersonas.viewmodels.ChatViewModel;[m
+[32m+[m[32mimport com.example.aipersonas.viewmodels.ChatListViewModelFactory;[m
+[32m+[m[32mimport com.example.aipersonas.viewmodels.ChatViewModelFactory;[m
+[32m+[m[32mimport com.google.firebase.Timestamp;[m
+[32m+[m[32mimport com.google.firebase.auth.FirebaseAuth;[m
+[32m+[m
+[32m+[m[32mimport java.util.ArrayList;[m
+[32m+[m[32mimport java.util.List;[m
+ [m
+ public class ChatActivity extends AppCompatActivity {[m
+ [m
+[32m+[m[32m    private ChatViewModel chatViewModel;[m
+[32m+[m[32m    private RecyclerView messageRecyclerView;[m
+[32m+[m[32m    private MessageAdapter messageAdapter;[m
+     private ImageButton sendButton;[m
+[32m+[m[32m    private EditText messageInput;[m
+[32m+[m[32m    private String chatId;[m
+[32m+[m[32m    private String personaId;[m
+[32m+[m[32m    private List<Message> messages;[m
+ [m
+     @Override[m
+     protected void onCreate(Bundle savedInstanceState) {[m
+[31m-[m
+         super.onCreate(savedInstanceState);[m
+         setContentView(R.layout.activity_chat);[m
+ [m
+[32m+[m[32m        // Initialize views[m
+         sendButton = findViewById(R.id.buttonSendMessage);[m
+[31m-[m
+[31m-        // Retrieve the chatId from the intent and use it to load chat messages[m
+[31m-        String chatId = getIntent().getStringExtra("chatId");[m
+[31m-        // TODO: Load messages for the specific chat using the chatId[m
+[31m-[m
+[31m-[m
+[32m+[m[32m        messageInput = findViewById(R.id.editTextMessage);[m
+[32m+[m[32m        messageRecyclerView = findViewById(R.id.messageRecyclerView);[m
+[32m+[m
+[32m+[m[32m        // Retrieve personaId and chatId from intent[m
+[32m+[m[32m        personaId = getIntent().getStringExtra("personaId");[m
+[32m+[m[32m        chatId = getIntent().getStringExtra("chatId");[m
+[32m+[m
+[32m+[m[32m        if (personaId == null || chatId == null) {[m
+[32m+[m[32m            Toast.makeText(this, "Invalid Persona or Chat ID", Toast.LENGTH_SHORT).show();[m
+[32m+[m[32m            finish();[m
+[32m+[m[32m            return;[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m        // Set up RecyclerView[m
+[32m+[m[32m        // @TODO: Analyze the architecture. Should we be opening this object everytime? fbAuth[m
+[32m+[m[32m        messageAdapter = new MessageAdapter(new ArrayList<>(), FirebaseAuth.getInstance().getUid());[m
+[32m+[m[32m        messageRecyclerView.setLayoutManager(new LinearLayoutManager(this));[m
+[32m+[m[32m        messageRecyclerView.setAdapter(messageAdapter);[m
+[32m+[m
+[32m+[m[32m        // Initialize ViewModel[m
+[32m+[m[32m        ChatViewModelFactory factory = new ChatViewModelFactory(getApplication(), personaId, chatId);[m
+[32m+[m[32m        ChatViewModel chatViewModel = new ViewModelProvider(this, factory).get(ChatViewModel.class);[m
+[32m+[m[32m        this.chatViewModel = chatViewModel;[m
+[32m+[m
+[32m+[m[32m        // Observe messages for the current chat[m
+[32m+[m[32m        observeMessages();[m
+[32m+[m
+[32m+[m[32m        // Handle send button click[m
+         sendButton.setOnClickListener(v -> {[m
+[31m-            if (!isOnline()) {[m
+[31m-                Snackbar.make(findViewById(R.id.chatLayout), "You need an internet connection to send messages.", Snackbar.LENGTH_LONG).show();[m
+[32m+[m[32m            String message = messageInput.getText().toString().trim();[m
+[32m+[m[32m            if (!message.isEmpty()) {[m
+[32m+[m[32m                sendMessage(message);[m
+[32m+[m[32m                messageInput.setText(""); // Clear input after sending[m
+             } else {[m
+[31m-                // Proceed with sending the message[m
+[31m-                // TODO: Implement sending the messagesendMessage();[m
+[32m+[m[32m                Toast.makeText(this, "Message cannot be empty", Toast.LENGTH_SHORT).show();[m
+             }[m
+         });[m
+[31m-[m
+[31m-[m
+     }[m
+ [m
+[31m-    private boolean isOnline() {[m
+[31m-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);[m
+[31m-        NetworkInfo netInfo = cm.getActiveNetworkInfo();[m
+[31m-        return netInfo != null && netInfo.isConnected();[m
+[31m-    }[m
+[32m+[m[32m    private void observeMessages() {[m
+[32m+[m[32m        chatViewModel.getMessagesForChat(chatId).observe(this, messages -> {[m
+ [m
+[31m-    private void setupConnectivityListener() {[m
+[31m-        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);[m
+[31m-        NetworkRequest request = new NetworkRequest.Builder().build();[m
+[32m+[m[32m            messageRecyclerView.setAdapter(messageAdapter);[m
+[32m+[m[32m            Log.d("ChatActivity", "Messages size: " + messages.size());[m
+[32m+[m[32m            //was crashing idk why[m
+ [m
+[31m-        connectivityManager.registerNetworkCallback(request, new ConnectivityManager.NetworkCallback() {[m
+[31m-            @Override[m
+[31m-            public void onAvailable(Network network) {[m
+[31m-                runOnUiThread(() -> sendButton.setEnabled(true)); // Enable send button when online[m
+[32m+[m[32m            if (messages != null && !messages.isEmpty()) {[m
+[32m+[m[32m                messageRecyclerView.smoothScrollToPosition(messages.size() - 1);[m
+             }[m
+ [m
+[31m-            @Override[m
+[31m-            public void onLost(Network network) {[m
+[31m-                runOnUiThread(() -> sendButton.setEnabled(false)); // Disable send button when offline[m
+[31m-            }[m
+[32m+[m
+         });[m
+     }[m
+[31m-}[m
+ [m
+ [m
+[32m+[m
+[32m+[m[32m    private void sendMessage(String messageContent) {[m
+[32m+[m[32m        Chat chat = new Chat();[m
+[32m+[m[32m        chat.setChatId(chatId);[m
+[32m+[m[32m        chat.setPersonaId(personaId);[m
+[32m+[m[32m        chat.setUserId(chatViewModel.getUserId()); // Assume ViewModel provides the current user ID[m
+[32m+[m[32m        chat.setLastMessage(messageContent);[m
+[32m+[m[32m        chat.setTimestamp(Timestamp.now());[m
+[32m+[m
+[32m+[m[32m        // Save message via ViewModel[m
+[32m+[m[32m        chatViewModel.insert(chat, personaId);[m
+[32m+[m
+[32m+[m[32m        String apiKey = chatViewModel.getGPTKeyLiveData().getValue();[m
+[32m+[m[32m        chatViewModel.sendMessage(messageContent, personaId, chatId);[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/src/main/java/com/example/aipersonas/activities/ChatListActivity.java b/app/src/main/java/com/example/aipersonas/activities/ChatListActivity.java[m
+[1mindex 31c4875..f7c1fe9 100644[m
+[1m--- a/app/src/main/java/com/example/aipersonas/activities/ChatListActivity.java[m
+[1m+++ b/app/src/main/java/com/example/aipersonas/activities/ChatListActivity.java[m
+[36m@@ -4,7 +4,6 @@[m [mimport android.content.Intent;[m
+ import android.os.Bundle;[m
+ import android.util.Log;[m
+ import android.view.MenuItem;[m
+[31m-import android.widget.Button;[m
+ import android.widget.Toast;[m
+ [m
+ import androidx.appcompat.app.AppCompatActivity;[m
+[36m@@ -13,7 +12,8 @@[m [mimport androidx.lifecycle.ViewModelProvider;[m
+ import androidx.recyclerview.widget.LinearLayoutManager;[m
+ import androidx.recyclerview.widget.RecyclerView;[m
+ [m
+[31m-import com.example.aipersonas.viewmodels.ChatViewModelFactory;[m
+[32m+[m[32mimport com.example.aipersonas.viewmodels.ChatListViewModel;[m
+[32m+[m[32mimport com.example.aipersonas.viewmodels.ChatListViewModelFactory;[m
+ import com.example.aipersonas.viewmodels.PersonaViewModel;[m
+ import com.google.android.material.floatingactionbutton.FloatingActionButton;[m
+ import com.google.firebase.Timestamp;[m
+[36m@@ -23,20 +23,17 @@[m [mimport com.example.aipersonas.R;[m
+ import com.example.aipersonas.adapters.ChatListAdapter;[m
+ import com.example.aipersonas.models.Chat;[m
+ import com.example.aipersonas.models.Persona;[m
+[31m-import com.example.aipersonas.repositories.ChatRepository;[m
+[31m-import com.example.aipersonas.viewmodels.ChatViewModel;[m
+ import com.google.firebase.auth.FirebaseAuth;[m
+ [m
+ public class ChatListActivity extends AppCompatActivity implements ChatListAdapter.OnChatClickListener {[m
+ [m
+     private RecyclerView chatListRecyclerView;[m
+[31m-    private ChatViewModel chatViewModel;[m
+[32m+[m[32m    private ChatListViewModel chatListViewModel;[m
+     private PersonaViewModel personaViewModel;[m
+     private ChatListAdapter chatListAdapter;[m
+     private Persona currentPersona;[m
+     private FloatingActionButton addChatButton;[m
+     private FirebaseAuth auth;[m
+[31m-    private ChatRepository chatRepository;[m
+ [m
+     @Override[m
+     protected void onCreate(Bundle savedInstanceState) {[m
+[36m@@ -61,12 +58,13 @@[m [mpublic class ChatListActivity extends AppCompatActivity implements ChatListAdapt[m
+ [m
+         // Get personaId from the intent[m
+         String personaId = null;[m
+[32m+[m
+         if (getIntent().hasExtra("personaId")) {[m
+             personaId = getIntent().getStringExtra("personaId");[m
+ [m
+             // Use ChatViewModelFactory to create ChatViewModel[m
+[31m-            ChatViewModelFactory factory = new ChatViewModelFactory(getApplication(), personaId);[m
+[31m-            chatViewModel = new ViewModelProvider(this, factory).get(ChatViewModel.class);[m
+[32m+[m[32m            ChatListViewModelFactory factory = new ChatListViewModelFactory(getApplication(), personaId);[m
+[32m+[m[32m            chatListViewModel = new ViewModelProvider(this, factory).get(ChatListViewModel.class);[m
+ [m
+             personaViewModel = new ViewModelProvider(this).get(PersonaViewModel.class);[m
+             personaViewModel.getPersonaById(personaId).observe(this, persona -> {[m
+[36m@@ -82,8 +80,8 @@[m [mpublic class ChatListActivity extends AppCompatActivity implements ChatListAdapt[m
+         Log.d("ChatListActivity", "Persona ID received: " + personaId);[m
+ [m
+         if (personaId != null) {[m
+[31m-            chatViewModel = new ViewModelProvider(this).get(ChatViewModel.class);[m
+[31m-            chatViewModel.getChatsForPersona(personaId).observe(this, chats -> {[m
+[32m+[m[32m            chatListViewModel = new ViewModelProvider(this).get(ChatListViewModel.class);[m
+[32m+[m[32m            chatListViewModel.getChatsForPersona(personaId).observe(this, chats -> {[m
+                 chatListAdapter.setChatList(chats);[m
+             });[m
+         } else {[m
+[36m@@ -97,7 +95,7 @@[m [mpublic class ChatListActivity extends AppCompatActivity implements ChatListAdapt[m
+             if (currentPersona != null) {[m
+                 // Create a new chat here[m
+                 Chat newChat = new Chat(userId, currentPersona.getPersonaId(), currentPersona.getName(), "New Chat", new Timestamp(new Date()));[m
+[31m-                chatViewModel.insert(newChat, currentPersona.getPersonaId());[m
+[32m+[m[32m                chatListViewModel.insert(newChat, currentPersona.getPersonaId());[m
+ [m
+                 Toast.makeText(ChatListActivity.this, "Chat added successfully!", Toast.LENGTH_SHORT).show();[m
+             } else {[m
+[36m@@ -123,6 +121,7 @@[m [mpublic class ChatListActivity extends AppCompatActivity implements ChatListAdapt[m
+         // logic to open the selected chat[m
+         Intent intent = new Intent(this, ChatActivity.class);[m
+         intent.putExtra("chatId", chat.getChatId()); // Pass the chatId to the ChatActivity[m
+[32m+[m[32m        intent.putExtra("personaId", chat.getPersonaId()); // Pass the personaId to the ChatActivity[m
+         startActivity(intent);[m
+     }[m
+ }[m
+[1mdiff --git a/app/src/main/java/com/example/aipersonas/activities/MainActivity.java b/app/src/main/java/com/example/aipersonas/activities/MainActivity.java[m
+[1mindex cc18135..7abcd7c 100644[m
+[1m--- a/app/src/main/java/com/example/aipersonas/activities/MainActivity.java[m
+[1m+++ b/app/src/main/java/com/example/aipersonas/activities/MainActivity.java[m
+[36m@@ -6,6 +6,8 @@[m [mimport android.view.LayoutInflater;[m
+ import android.view.View;[m
+ import android.widget.Button;[m
+ import android.widget.EditText;[m
+[32m+[m[32mimport android.widget.SearchView;[m
+[32m+[m[32mimport android.widget.TextView;[m
+ import android.widget.Toast;[m
+ import androidx.annotation.NonNull;[m
+ import androidx.appcompat.app.AlertDialog;[m
+[36m@@ -14,12 +16,15 @@[m [mimport androidx.lifecycle.ViewModelProvider;[m
+ import androidx.recyclerview.widget.GridLayoutManager;[m
+ import androidx.recyclerview.widget.RecyclerView;[m
+ import android.util.Log;[m
+[31m-[m
+ import com.example.aipersonas.R;[m
+[32m+[m
+ import com.example.aipersonas.adapters.PersonaAdapter;[m
+ import com.example.aipersonas.models.Persona;[m
+ import com.example.aipersonas.repositories.PersonaRepository;[m
+[32m+[m[32mimport com.example.aipersonas.repositories.UserRepository;[m
+ import com.example.aipersonas.viewmodels.PersonaViewModel;[m
+[32m+[m

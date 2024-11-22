@@ -1,70 +1,114 @@
 package com.example.aipersonas.activities;
 
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkInfo;
-import android.net.NetworkRequest;
 import android.os.Bundle;
-import android.widget.Button;
+import android.util.Log;
+import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.aipersonas.R;
-import com.google.android.material.snackbar.Snackbar;
+import com.example.aipersonas.adapters.MessageAdapter;
+import com.example.aipersonas.models.Chat;
+import com.example.aipersonas.models.Message;
+import com.example.aipersonas.repositories.ChatRepository;
+import com.example.aipersonas.viewmodels.ChatViewModel;
+import com.example.aipersonas.viewmodels.ChatListViewModelFactory;
+import com.example.aipersonas.viewmodels.ChatViewModelFactory;
+import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ChatActivity extends AppCompatActivity {
 
+    private ChatViewModel chatViewModel;
+    private RecyclerView messageRecyclerView;
+    private MessageAdapter messageAdapter;
     private ImageButton sendButton;
+    private EditText messageInput;
+    private String chatId;
+    private String personaId;
+    private List<Message> messages;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
+        // Initialize views
         sendButton = findViewById(R.id.buttonSendMessage);
+        messageInput = findViewById(R.id.editTextMessage);
+        messageRecyclerView = findViewById(R.id.messageRecyclerView);
 
-        // Retrieve the chatId from the intent and use it to load chat messages
-        String chatId = getIntent().getStringExtra("chatId");
-        // TODO: Load messages for the specific chat using the chatId
+        // Retrieve personaId and chatId from intent
+        personaId = getIntent().getStringExtra("personaId");
+        chatId = getIntent().getStringExtra("chatId");
 
+        if (personaId == null || chatId == null) {
+            Toast.makeText(this, "Invalid Persona or Chat ID", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
+        // Set up RecyclerView
+        // @TODO: Analyze the architecture. Should we be opening this object everytime? fbAuth
+        messageAdapter = new MessageAdapter(new ArrayList<>(), FirebaseAuth.getInstance().getUid());
+        messageRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        messageRecyclerView.setAdapter(messageAdapter);
+
+        // Initialize ViewModel
+        ChatViewModelFactory factory = new ChatViewModelFactory(getApplication(), personaId, chatId);
+        ChatViewModel chatViewModel = new ViewModelProvider(this, factory).get(ChatViewModel.class);
+        this.chatViewModel = chatViewModel;
+
+        // Observe messages for the current chat
+        observeMessages();
+
+        // Handle send button click
         sendButton.setOnClickListener(v -> {
-            if (!isOnline()) {
-                Snackbar.make(findViewById(R.id.chatLayout), "You need an internet connection to send messages.", Snackbar.LENGTH_LONG).show();
-            } else {
-                // Proceed with sending the message
-                // TODO: Implement sending the messagesendMessage();
+            String message = messageInput.getText().toString();
+            if (!message.isEmpty()) {
+                chatViewModel.sendMessage(message, personaId, chatId);
+                messageInput.setText("");
             }
         });
-
-
     }
 
-    private boolean isOnline() {
-        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        return netInfo != null && netInfo.isConnected();
-    }
+    private void observeMessages() {
+        chatViewModel.getMessagesForChat(chatId).observe(this, messages -> {
 
-    private void setupConnectivityListener() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkRequest request = new NetworkRequest.Builder().build();
+            messageRecyclerView.setAdapter(messageAdapter);
+            Log.d("ChatActivity", "Messages size: " + messages.size());
+            //was crashing idk why
 
-        connectivityManager.registerNetworkCallback(request, new ConnectivityManager.NetworkCallback() {
-            @Override
-            public void onAvailable(Network network) {
-                runOnUiThread(() -> sendButton.setEnabled(true)); // Enable send button when online
+            if (messages != null && !messages.isEmpty()) {
+                messageRecyclerView.smoothScrollToPosition(messages.size() - 1);
             }
 
-            @Override
-            public void onLost(Network network) {
-                runOnUiThread(() -> sendButton.setEnabled(false)); // Disable send button when offline
-            }
+
         });
+    }
+
+
+
+    private void sendMessage(String messageContent) {
+        Chat chat = new Chat();
+        chat.setChatId(chatId);
+        chat.setPersonaId(personaId);
+        chat.setUserId(chatViewModel.getUserId()); // Assume ViewModel provides the current user ID
+        chat.setLastMessage(messageContent);
+        chat.setTimestamp(Timestamp.now());
+
+        // Save message via ViewModel
+        chatViewModel.insert(chat, personaId);
+
+        String apiKey = chatViewModel.getGPTKeyLiveData().getValue();
+        chatViewModel.sendMessage(messageContent, personaId, chatId);
     }
 }
-
-

@@ -170,6 +170,17 @@ Users can now click on a persona and initiate a chat. The persona’s name and I
 Updated the Chat model to make sure it has everything it needs—like the persona title and ID.
 We added a basic check to make sure users can only create a chat if all the required persona details are provided.
 
+
+Firestore Root
+└── config (Collection)
+    └── apiKeys (Document)
+        ├── gptApiKey: String
+
+
+I just overloaded the constructor for preexisting Chat objects (e.g., syncing from Firestore)
+This way we can sync between both our dbs.
+
+
 ## Contributors
 - Guilherme Miranda (Developer & Project Lead)
 - Anastasia (Developer)

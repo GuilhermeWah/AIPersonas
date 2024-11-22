@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.storage.CacheResetOnProcessCanceled.enabled
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -7,6 +9,9 @@ plugins {
 android {
     namespace = "com.example.aipersonas"
     compileSdk = 34
+
+
+
 
     defaultConfig {
         applicationId = "com.example.aipersonas"
@@ -33,6 +38,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+
 }
 
 
@@ -42,8 +48,8 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.activity:activity-ktx:1.5.1")
 
-    // Material Components
-    implementation("com.google.android.material:material:1.6.1")
+    // Material Components -> icons
+    implementation ("com.google.android.material:material:1.9.0")
 
     // Firebase BOM (to manage versions of Firebase libraries consistently)
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
@@ -59,14 +65,18 @@ dependencies {
     // Room Database
     implementation("androidx.room:room-runtime:2.4.3")
     implementation("androidx.room:room-ktx:2.4.3")
+    implementation(libs.security.crypto)
+    implementation(libs.activity)
     annotationProcessor("androidx.room:room-compiler:2.4.3") // For Java-based projects
 
-    //Icons
-    implementation ("com.google.android.material:material:1.9.0")
 
-    //Testing Room db Stetho
 
- 
+    //OkHttp Dependency
+    implementation ("com.squareup.okhttp3:okhttp:4.11.0");
+
+    //Aryan Animation Splashscreen
+    implementation("com.airbnb.android:lottie:6.3.0")
+
     // Test Dependencies
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.4")

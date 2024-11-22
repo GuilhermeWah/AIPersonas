@@ -27,8 +27,8 @@ The project is built with an MVVM (Model-View-ViewModel) architecture to enhance
    - `Chat.java`: Represents individual chats between a persona and a user.
 
 4. **ViewModels**: Implements the logic behind the application and interacts with the repository for data handling.
-   - `PersonaViewModel.java`: Manages the interaction between the PersonaRepository and the UI.
-   - `ChatViewModel.java`: Manages data related to chats, ensuring consistency between the UI and the data source.
+   - `PersonaViewModel`: Manages the interaction between the PersonaRepository and the UI.
+   - `ChatViewModel`: Manages data related to chats, ensuring consistency between the UI and the data source.
 
 5. **Database**:
    - **Room Database**: Implements a local database for offline storage, ensuring users have access to their chats and personas when offline.

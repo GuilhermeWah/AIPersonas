@@ -2,6 +2,7 @@ package com.example.aipersonas.models;
 
 import androidx.annotation.NonNull;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "user_table")
@@ -19,6 +20,7 @@ public class User {
     }
 
     // Constructor for creating a User instance
+    @Ignore
     public User(@NonNull String userId, String firstName, String lastName, String email, String avatarUrl) {
         this.userId = userId;
         this.firstName = firstName;
