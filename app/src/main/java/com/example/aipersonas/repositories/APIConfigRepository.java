@@ -3,8 +3,6 @@ package com.example.aipersonas.repositories;
 import android.content.Context;
 import android.util.Log;
 
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import androidx.security.crypto.EncryptedSharedPreferences;
 import androidx.security.crypto.MasterKeys;
 
@@ -16,16 +14,13 @@ import java.security.GeneralSecurityException;
 public class APIConfigRepository {
 
     private static final String TAG = "APIConfigRepository";
-    private static final String COLLECTION_NAME = "apiKeys";
-    private static final String DOCUMENT_NAME = "sensitive_settings";
+    private static final String COLLECTION_NAME = "sensitive_settings";
+    private static final String DOCUMENT_NAME = "apiKeys";
     private static final String GPT_KEY_FIELD = "openai_api_key";
 
     private final FirebaseFirestore firestore;
     private EncryptedSharedPreferences encryptedPreferences;
-
-    // LiveData for GPT API Key
-    private final MutableLiveData<String> gptKeyLiveData = new MutableLiveData<>();
-    private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+    private final String gptKey;
 
     public APIConfigRepository(Context context) {
         firestore = FirebaseFirestore.getInstance();
@@ -40,46 +35,33 @@ public class APIConfigRepository {
             );
         } catch (IOException | GeneralSecurityException e) {
             Log.e(TAG, "Error initializing encrypted preferences", e);
-            errorLiveData.postValue("Failed to initialize secure storage");
+            gptKey = null;
+            return;
         }
+        gptKey = fetchGPTKey();
     }
 
     /**
-     * Retrieves the GPT API key & Any API keys from Firestore.
-     * If cached locally, fetches from local storage. Otherwise, retrieves from Firestore.
-     * It was a good idea to be honest ...  By caching it we don't have to make requests to the
-     * cloud everytime we need to access it. For this reason we are using  the MasterKeys,
-     * to encrypt it. Not sure yet if it's a safe choice. What if user access their device
-     * data files, and get to know it ? What are the odds of it being decrypted? Would be such a
-     * big problem having both api keys exposed. @TODO: ask jaspret
+     * Retrieves the GPT API key from local cache or Firestore.
+     *
+     * @return GPT API key as a String.
      */
-    public void fetchGPTKey() {
+    private String fetchGPTKey() {
         String cachedKey = getCachedKey(GPT_KEY_FIELD);
         if (cachedKey != null) {
-            gptKeyLiveData.postValue(cachedKey);
+            return cachedKey;
         } else {
             fetchGPTKeyFromFirestore();
+            return null; // Return null initially, Firestore fetch is async
         }
-    }
-
-    /**
-     * LiveData for observing the GPT API key.
-     */
-    public LiveData<String> getGPTKeyLiveData() {
-        return gptKeyLiveData;
-    }
-
-    /**
-     * LiveData for observing errors.
-     */
-    public LiveData<String> getErrorLiveData() {
-        return errorLiveData;
     }
 
     /**
      * Fetch the GPT API key from Firestore.
      */
     private void fetchGPTKeyFromFirestore() {
+        Log.d(TAG, "Attempting to fetch GPT Key from Firestore at path: " + COLLECTION_NAME + "/" + DOCUMENT_NAME);
+
         firestore.collection(COLLECTION_NAME)
                 .document(DOCUMENT_NAME)
                 .get()
@@ -88,17 +70,16 @@ public class APIConfigRepository {
                         String gptKey = documentSnapshot.getString(GPT_KEY_FIELD);
                         if (gptKey != null) {
                             cacheApiKey(GPT_KEY_FIELD, gptKey);
-                            gptKeyLiveData.postValue(gptKey);
+                            Log.d(TAG, "GPT API Key successfully fetched: " + gptKey);
                         } else {
-                            errorLiveData.postValue("GPT API key not found in Firestore");
+                            Log.e(TAG, "GPT API key not found in Firestore document");
                         }
                     } else {
-                        errorLiveData.postValue("Firestore document not found");
+                        Log.e(TAG, "Firestore document not found at: " + COLLECTION_NAME + "/" + DOCUMENT_NAME);
                     }
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to fetch GPT API key from Firestore", e);
-                    errorLiveData.postValue("Failed to fetch GPT API key: " + e.getMessage());
                 });
     }
 
@@ -119,5 +100,14 @@ public class APIConfigRepository {
             return encryptedPreferences.getString(key, null);
         }
         return null;
+    }
+
+    /**
+     * Get the GPT API key.
+     *
+     * @return GPT API key as a String.
+     */
+    public String getGPTKey() {
+        return gptKey;
     }
 }

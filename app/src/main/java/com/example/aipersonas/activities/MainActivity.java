@@ -97,6 +97,8 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
             }
         });
 
+
+
         BottomNavigationView bottomNavigationView = findViewById(R.id.bottom_navigation);
 
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
@@ -137,16 +139,17 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
     }
 
     //  show dialog for creating a new persona/chat
+// Updated showCreateChatDialog method
     private void showCreateChatDialog() {
         // Inflate the dialog layout
         LayoutInflater inflater = LayoutInflater.from(this);
         View dialogView = inflater.inflate(R.layout.create_personamodal, null);
 
-        // Initialize the EditTexts from the modal  layout we created
+        // Initialize the EditTexts from the modal layout we created
         EditText personaTitleEditText = dialogView.findViewById(R.id.editTextPersonaTitle);
         EditText personaDescriptionEditText = dialogView.findViewById(R.id.editTextPersonaDescription);
 
-        // build and show the modal
+        // Build and show the modal
         new AlertDialog.Builder(this)
                 .setTitle("Create New Persona")
                 .setView(dialogView)
@@ -155,9 +158,23 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
                     String description = personaDescriptionEditText.getText().toString().trim();
 
                     if (!title.isEmpty() && !description.isEmpty()) {
-                        // here we are creating the persona and storing it on the db
                         Persona newPersona = new Persona(title, description);
+                        // Insert the persona into the database
                         personaViewModel.insert(newPersona);
+
+                        // Ask the user if they want to improve the description
+                        new AlertDialog.Builder(this)
+                                .setTitle("Improve Description")
+                                .setMessage("Do you want us to improve this description for you? For a better experience?")
+                                .setPositiveButton("Yes", (innerDialog, innerWhich) -> {
+                                    // Call GPT API to tailor the description
+                                    personaViewModel.tailorPersonaDescription(newPersona.getPersonaId(), description);
+                                })
+                                .setNegativeButton("No", (innerDialog, innerWhich) -> {
+                                    // Store the original description without tailoring
+                                    personaRepository.storePersonaDescription(newPersona.getPersonaId(), description);
+                                })
+                                .show();
 
                         Toast.makeText(MainActivity.this, "Persona created successfully!", Toast.LENGTH_SHORT).show();
                     } else {
@@ -168,6 +185,8 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
                 .create()
                 .show();
     }
+
+
 
     private void deletePersona(Persona persona) {
         personaViewModel.delete(persona, new PersonaRepository.FirestoreCallback() {
@@ -185,15 +204,6 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
         });
     }
 
-
-    /*   @Override
-      public void onPersonaClick(Persona persona) {
-          // Open ChatActivity with selected persona
-          Intent intent = new Intent(MainActivity.this, ChatListActivity.class);
-          intent.putExtra("personaId", persona.getPersonaId());
-          startActivity(intent);
-
-      }*/
     @Override
     public void onPersonaClick(Persona persona) {
         if (persona != null) {
@@ -223,6 +233,9 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
                 })
                 .show();
     }
+
+
+
     //dummy datam just to test.
     @NonNull
     private List<Persona> createDummyPersonas() {

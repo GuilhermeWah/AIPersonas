@@ -1,53 +1,38 @@
 package com.example.aipersonas.viewmodels;
 
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 import com.example.aipersonas.repositories.APIConfigRepository;
 
-
-import java.util.Map;
-
-
 /**
-*
-*   I just thought about it ..  There's no need of storing the
- *  the Firebase  Auth  key in the firestore. They are not server API Keys
- *  they are designed to be exposed in client-side apps. Without proper authentication
- *  no one can read/write to the firestore. That's why I've been setting the rules on the
- *  firebase console lol*
-*
-* */
-public class APISettingsViewModel extends ViewModel   {
+ * I just thought about it ..  There's no need of storing the
+ * Firebase Auth key in the firestore. They are not server API Keys
+ * they are designed to be exposed in client-side apps. Without proper authentication
+ * no one can read/write to the firestore. That's why I've been setting the rules on the
+ * firebase console lol
+ */
+public class APISettingsViewModel extends ViewModel {
 
     private final APIConfigRepository repository;
-    private final MutableLiveData<String> gptKeyLiveData = new MutableLiveData<>();
-    private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+    private String gptKey;
+    private String error;
 
     public APISettingsViewModel(APIConfigRepository repository) {
         this.repository = repository;
+        fetchApiKeys(); // Fetch API keys during initialization
     }
 
-    public LiveData<String> getApiKeysLiveData() {
-        return gptKeyLiveData;
+    public String getGptKey() {
+        return gptKey;
     }
 
-    public LiveData<String> getErrorLiveData() {
-        return errorLiveData;
+    public String getError() {
+        return error;
     }
 
-    public void fetchApiKeys() {
-        repository.fetchGPTKey();
-        repository.getGPTKeyLiveData().observeForever(apiKey -> {
-            if (apiKey != null) {
-                gptKeyLiveData.postValue(apiKey); // Assuming apiKeysLiveData is now a MutableLiveData<String>
-            }
-        });
-        repository.getErrorLiveData().observeForever(error -> {
-            if (error != null) {
-                errorLiveData.postValue(error);
-            }
-        });
+    private void fetchApiKeys() {
+        gptKey = repository.getGPTKey();
+        if (gptKey == null) {
+            error = "Failed to retrieve GPT API key";
+        }
     }
-
 }

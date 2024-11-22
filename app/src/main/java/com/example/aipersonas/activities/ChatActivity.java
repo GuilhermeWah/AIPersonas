@@ -73,7 +73,15 @@ public class ChatActivity extends AppCompatActivity {
         // Handle send button click
         sendButton.setOnClickListener(v -> {
             String message = messageInput.getText().toString();
+            Log.e("ChatActivity", "btn clicked: Sending message: " + message);
             if (!message.isEmpty()) {
+                Log.e("ChatActivity", "Inside the condition: Sending message: " + message);
+
+                if (chatViewModel == null) {
+                    Log.e("ChatActivity", "chatViewModel is null. Cannot send message.");
+                    return;
+                }
+                Log.e("ChatActivity", "ViewModel initialized, sending message.");
                 chatViewModel.sendMessage(message, personaId, chatId);
                 messageInput.setText("");
             }
@@ -96,19 +104,20 @@ public class ChatActivity extends AppCompatActivity {
     }
 
 
+private void sendMessage(String messageContent) {
+    Log.d("ChatActivity", "sendMessage called with content: " + messageContent);
+    Chat chat = new Chat();
+    chat.setChatId(chatId);
+    chat.setPersonaId(personaId);
+    chat.setUserId(chatViewModel.getUserId()); // Assume ViewModel provides the current user ID
+    chat.setLastMessage(messageContent);
+    chat.setTimestamp(Timestamp.now());
 
-    private void sendMessage(String messageContent) {
-        Chat chat = new Chat();
-        chat.setChatId(chatId);
-        chat.setPersonaId(personaId);
-        chat.setUserId(chatViewModel.getUserId()); // Assume ViewModel provides the current user ID
-        chat.setLastMessage(messageContent);
-        chat.setTimestamp(Timestamp.now());
+    // Save message via ViewModel
+    chatViewModel.insert(chat, personaId);
 
-        // Save message via ViewModel
-        chatViewModel.insert(chat, personaId);
-
-        String apiKey = chatViewModel.getGPTKeyLiveData().getValue();
-        chatViewModel.sendMessage(messageContent, personaId, chatId);
-    }
+    String apiKey = chatViewModel.getGptApiKey();
+    Log.d("ChatActivity", "API Key: " + apiKey);
+    chatViewModel.sendMessage(messageContent, personaId, chatId);
+}
 }

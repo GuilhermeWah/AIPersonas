@@ -11,7 +11,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.aipersonas.models.Chat;
 import com.example.aipersonas.models.Message;
 import com.example.aipersonas.repositories.ChatRepository;
-import com.example.aipersonas.repositories.APIConfigRepository;
+import com.example.aipersonas.repositories.GPTRepository;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -21,8 +21,8 @@ public class ChatViewModel extends AndroidViewModel {
 
     private static final String TAG = "ChatViewModel";
     private final ChatRepository chatRepository;
+    private final GPTRepository gptRepository;
     private final LiveData<List<Chat>> chatsForCurrentChat;
-    private final LiveData<String> gptKeyLiveData;
     private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
     private final String personaId;
     private final String chatId;
@@ -31,17 +31,12 @@ public class ChatViewModel extends AndroidViewModel {
         super(application);
 
         this.chatRepository = new ChatRepository(application, personaId);
+        this.gptRepository = new GPTRepository(application); // Initialize GPTRepository
         this.chatId = chatId;
         this.personaId = personaId;
-        /*
-          it fetches the Chats Sub-Collection under the specified
-          PersonaID for the currently authenticated UserID.
-         */
-        chatsForCurrentChat = chatRepository.getChatsForPersona(personaId);
 
-        // Retrieve API keys from APIConfigRepository
-        APIConfigRepository apiConfigRepository = new APIConfigRepository(application);
-        gptKeyLiveData = apiConfigRepository.getGPTKeyLiveData();
+        // Initialize LiveData objects
+        chatsForCurrentChat = chatRepository.getChatsForPersona(personaId);
     }
 
     public LiveData<List<Chat>> getChatsForCurrentChat() {
@@ -52,45 +47,36 @@ public class ChatViewModel extends AndroidViewModel {
         return chatRepository.getMessagesForChat(chatId); // Ensure this method exists in the repository
     }
 
-    public LiveData<String> getGPTKeyLiveData() {
-        return gptKeyLiveData;
-    }
-
     public LiveData<String> getErrorLiveData() {
         return errorLiveData;
     }
 
     public void sendMessage(String message, String personaId, String chatId) {
-        gptKeyLiveData.observeForever(gptKey -> {
-            if (gptKey != null) {
-                chatRepository.sendMessageToGPT(message, personaId, chatId, gptKey, new ChatRepository.ApiCallback() {
-                    @Override
-                    public void onSuccess(String response) {
-                        Log.d(TAG, "GPT Response: " + response);
+        Log.d(TAG, "[CVM] sendMessage called with message: " + message);
 
-                        // Adiciona a resposta do GPT como uma nova mensagem de chat
-                        Chat responseChat = new Chat(
-                                personaId,           // ID da Persona
-                                chatId,             // ID do Chat
-                                "GPT",             // Título da Persona
-                                response,         // Conteúdo da Mensagem
-                                Timestamp.now()  // Timestamp
-                        );
-                        chatRepository.insert(responseChat, personaId);
-                    }
+        // Use GPTRepository to handle GPT API interaction
+        gptRepository.sendGPTRequest(message, 150, 0.7f, new GPTRepository.ApiCallback() {
+            @Override
+            public void onSuccess(String response) {
+                Log.d(TAG, "GPT Response: " + response);
+                Chat responseChat = new Chat(
+                        personaId,
+                        chatId,
+                        "GPT",
+                        response,
+                        Timestamp.now()
+                );
+                chatRepository.insert(responseChat, personaId);
+            }
 
-                    @Override
-                    public void onFailure(String error) {
-                        Log.e(TAG, "Failed to get GPT response: " + error);
-                        errorLiveData.postValue(error);
-                    }
-                });
-            } else {
-                Log.e(TAG, "GPT key is null");
-                errorLiveData.postValue("GPT key is null");
+            @Override
+            public void onFailure(String error) {
+                Log.e(TAG, "Failed to get GPT response: " + error);
+                errorLiveData.postValue(error);
             }
         });
     }
+
 
     public void insert(Chat chat, String personaId) {
         chatRepository.insert(chat, personaId);
@@ -108,4 +94,7 @@ public class ChatViewModel extends AndroidViewModel {
         return FirebaseAuth.getInstance().getUid();
     }
 
+    public String getGptApiKey() {
+        return gptRepository.getGptKey();
+    }
 }

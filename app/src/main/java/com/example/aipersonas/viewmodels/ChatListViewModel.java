@@ -19,7 +19,7 @@ public class ChatListViewModel extends AndroidViewModel {
     private static final String TAG = "ChatViewModel";
     private final ChatRepository repository;
     private final LiveData<List<Chat>> allChats;
-    private final LiveData<String> gptKeyLiveData;
+    private final String gptApiKey;
     private MutableLiveData<String> errorLiveData = new MutableLiveData<>();
 
 
@@ -31,7 +31,7 @@ public class ChatListViewModel extends AndroidViewModel {
         // Retrieve API keys from APIConfigRepository
         APIConfigRepository apiConfigRepository;
         apiConfigRepository = new APIConfigRepository(application);
-        gptKeyLiveData = apiConfigRepository.getGPTKeyLiveData();
+        gptApiKey = apiConfigRepository.getGPTKey();
     }
 
     // Chat CRUD operations
@@ -51,16 +51,16 @@ public class ChatListViewModel extends AndroidViewModel {
         return repository.getChatsForPersona(personaId);
     }
 
-    public LiveData<String> getGPTKeyLiveData() {
-        return gptKeyLiveData;
+    public String getGPTKey() {
+        return gptApiKey;
     }
 
     // Handle sending a message to GPT
     public void sendMessageToGPT(String message, String personaId, String chatId) {
-        gptKeyLiveData.observeForever(gptKey -> {
-            if (gptKey != null) {
+
+            if (gptApiKey != null) {
                 // Call the repository method
-                repository.sendMessageToGPT(message, personaId, chatId, gptKey, new ChatRepository.ApiCallback() {
+                repository.sendMessageToGPT(message, personaId, chatId, gptApiKey, new ChatRepository.ApiCallback() {
                     @Override
                     public void onSuccess(String response) {
                         // Insert GPT's response into the chat repository
@@ -77,7 +77,6 @@ public class ChatListViewModel extends AndroidViewModel {
                 Log.e(TAG, "GPT key is null");
                 errorLiveData.postValue("GPT key is null");
             }
-        });
     }
 
 }
