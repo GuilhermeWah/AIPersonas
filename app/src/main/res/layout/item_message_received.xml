@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal"
-    android:layout_width="match_parent"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:gravity="start"
+    android:orientation="vertical"
     android:padding="8dp">
 
     <TextView
-        android:id="@+id/textMessage"
+        android:id="@+id/text_message_received"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="@color/primary_light_20"
-        android:padding="12dp"
+        android:background="@drawable/rounded_button_background_primary"
+        android:padding="8dp"
         android:textColor="@android:color/black"
         android:textSize="16sp" />
 
     <TextView
-        android:id="@+id/textTimestamp"
+        android:id="@+id/text_message_timestamp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
         android:textColor="@android:color/darker_gray"
-        android:textSize="12sp" />
+        android:textSize="12sp"
+        android:layout_marginTop="4dp"/>
 </LinearLayout>
