@@ -34,5 +34,6 @@
     <string name="persona_title">Persona Title</string>
     <string name="add_chat">Add Chat</string>
     <string name="conversations">Conversations</string>
+    <string name="typing">typing\n</string>
 
 </resources>

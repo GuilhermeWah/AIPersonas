@@ -13,7 +13,7 @@ public class Persona {
     @PrimaryKey @NonNull
     private String personaId;  // ID shared with Firestore (String instead of int)
     private String name;
-    private String description;
+    private String personaDescription;
     private String gptDescription;
 
     // Empty constructor for Firestore serialization
@@ -23,10 +23,10 @@ public class Persona {
     }
 
     // Constructor
-    public Persona(String name, String description) {
+    public Persona(String name, String personaDescription) {
         this.personaId = UUID.randomUUID().toString(); // Manually generate ID
         this.name = name;
-        this.description = description;
+        this.personaDescription = personaDescription;
         this.gptDescription = "";
     }
 
@@ -44,15 +44,13 @@ public class Persona {
         this.name = name;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public void setPersonaDescription (String personaDescription) {this.personaDescription = personaDescription; }
 
     public String getName() {
         return name;
     }
 
-    public String getDescription() {return description;}
+    public String getPersonaDescription() {return personaDescription;}
 
     public String getGptDescription() {return gptDescription;}
 

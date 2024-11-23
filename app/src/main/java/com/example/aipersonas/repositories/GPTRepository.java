@@ -3,9 +3,22 @@ package com.example.aipersonas.repositories;
 import android.app.Application;
 import android.util.Log;
 
+import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LiveData;
 
+import com.example.aipersonas.databases.ChatDAO;
+import com.example.aipersonas.databases.ChatDatabase;
+import com.example.aipersonas.models.Chat;
+import com.example.aipersonas.models.Message;
+import com.example.aipersonas.utils.SummaryUtils;
+import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -21,11 +34,19 @@ public class GPTRepository {
     private final OkHttpClient client;
     private final APIConfigRepository apiConfigRepository; // Reference to get the API key
     private final String gptKey;
+    private final FirebaseFirestore firebaseFirestore;
+    private final Executor executor;
+    private final ChatDAO chatDAO;
+
 
     public GPTRepository(Application application) {
         this.client = new OkHttpClient();
         this.apiConfigRepository = new APIConfigRepository(application);
-        this.gptKey = fetchGPTKey(); // Initialize gptKey with null
+        this.gptKey = fetchGPTKey();
+        this.firebaseFirestore = FirebaseFirestore.getInstance();
+        this.executor = Executors.newSingleThreadExecutor();
+        this.chatDAO = ChatDatabase.getInstance(application).chatDao();
+
     }
 
     // Define ApiCallback interface
@@ -47,7 +68,6 @@ public class GPTRepository {
     public String getGptKey() {
         return gptKey;
     }
-
 
     // Function to handle GPT requests
     public void sendGPTRequest(String prompt, int maxTokens, float temperature, ApiCallback callback) {
@@ -85,16 +105,16 @@ public class GPTRepository {
         });
     }
 
+    //@TODO: Documenting this function
+    public String buildGPTRequestBody(String description, int maxTokens, float temperature) {
+        String instruction = "You are tasked with refining the persona description provided for internal use only. "
+                + "This refined description is intended to optimize GPT's understanding and simulation of the persona during user interactions. "
+                + "The purpose is to make the persona more effective in responding to user queries by capturing key skills, expertise, personality traits, motivations, and communication style. "
+                + "This internal version should help GPT maintain context, exhibit consistent personality traits, and respond in a manner that aligns with the persona’s defined characteristics throughout all interactions. "
+                + "Make sure to emphasize the persona's role, capabilities, motivations, and approach to communication, ensuring the resulting description is insightful, comprehensive, and well-structured for internal use by GPT. "
+                + "The refined description will not be displayed to the user but will be used solely to guide GPT's behavior in conversations.";
 
-    // Helper to build request body for chat models
-    private String buildGPTRequestBody(String description, int maxTokens, float temperature) {
-        String instruction = "You are an AI language model tasked with tailoring persona descriptions for user-facing virtual assistants. " +
-                "The purpose of tailoring this persona description is to help GPT effectively maintain context throughout interactions with the user, " +
-                "and to ensure that the virtual assistant provides responses that are highly relevant, personalized, and context-aware. " +
-                "Your goal is to refine the given persona description by making it more engaging, precise, and informative. " +
-                "Highlight the persona's role, key expertise, personality traits, motivation, and interaction style. " +
-                "Make sure the refined description supports consistency, context retention, and user engagement, while maintaining a balance between professionalism and approachability.";
-
+        // Constructing the JSON request body
         return "{"
                 + "\"model\":\"gpt-3.5-turbo\","
                 + "\"messages\":["
@@ -106,11 +126,100 @@ public class GPTRepository {
                 + "}";
     }
 
+    // Method to summarize messages
+    public void summarizeMessages(List<Message> messages, ApiCallback callback) {
+        if (gptKey == null) {
+            Log.e(TAG, "GPT Key is null, cannot proceed.");
+            callback.onFailure("Missing GPT API key");
+            return;
+        }
+
+        StringBuilder conversation = new StringBuilder();
+        for (Message message : messages) {
+            conversation.append(message.getSenderId()).append(": ").append(message.getMessageContent()).append("\n");
+        }
+
+        String requestBody = "{"
+                + "\"model\":\"gpt-3.5-turbo\","
+                + "\"messages\":["
+                + "{\"role\":\"system\", \"content\":\"Please summarize the following conversation:\"},"
+                + "{\"role\":\"user\", \"content\":\"" + conversation.toString() + "\"}"
+                + "],"
+                + "\"max_tokens\":500,"
+                + "\"temperature\":0.5"
+                + "}";
+
+        Request request = new Request.Builder()
+                .url("https://api.openai.com/v1/chat/completions")
+                .addHeader("Authorization", "Bearer " + gptKey)
+                .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "HTTP request failed: " + e.getMessage());
+                callback.onFailure(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body().string());
+                } else {
+                    String errorResponse = response.body() != null ? response.body().string() : "Unknown error";
+                    Log.e(TAG, "HTTP request failed with code: " + response.code() + ", response: " + errorResponse);
+                    callback.onFailure(errorResponse);
+                }
+            }
+        });
+    }
+
+    // Method to request summarization if needed
+    public void requestSummarizationIfNeeded(String chatId, LifecycleOwner lifecycleOwner) {
+        LiveData<List<Message>> liveMessages = chatDAO.getMessagesForChat(chatId);
+        String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        String personaId = chatDAO.getPersonaIdForChat(chatId);
+
+        // Observe the liveMessages with a lifecycleOwner
+        liveMessages.observe(lifecycleOwner, messages -> {
+            if (messages.size() % 10 == 0) {
+                // Trigger summarization after every 10 messages
+                summarizeMessages(messages, new ApiCallback() {
+                    @Override
+                    public void onSuccess(String summary) {
+                        Log.d(TAG, "Summary generated: " + summary);
+
+                        // Save the summary to Room and Firestore
+                        executor.execute(() -> {
+                            Chat chat = chatDAO.getChatByIdSync(chatId);
+                            if (chat != null) {
+                                chat.setChatSummary(summary);
+                                chat.setLastSummaryTime(Timestamp.now());
+                                chatDAO.updateChat(chat);
+                            }
+                        });
+
+                        // Also store the summary in Firestore
+                        firebaseFirestore.collection("Users").document(currentUserId)
+                                .collection("Personas").document(personaId)
+                                .collection("Chats").document(chatId)
+                                .update("chatSummary", summary, "lastSummaryTime", Timestamp.now())
+                                .addOnSuccessListener(aVoid -> Log.d(TAG, "Summary successfully updated in Firestore."))
+                                .addOnFailureListener(e -> Log.e(TAG, "Error updating summary in Firestore", e));
+                    }
+
+                    @Override
+                    public void onFailure(String errorMessage) {
+                        Log.e(TAG, "Failed to generate summary: " + errorMessage);
+                    }
+                });
+            }
+        });
+    }
 
 
 
 
 
 }
-
-

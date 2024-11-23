@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.aipersonas.R;
 import com.example.aipersonas.models.Chat;
+import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +19,9 @@ import java.util.List;
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder> {
 
     private List<Chat> chatList = new ArrayList<>(); // this approach avoids  null issues
-    /*
+    private String currentUserId;
 
-     */
+
     private OnChatClickListener chatClickListener;
 
     public interface OnChatClickListener {
@@ -30,6 +31,8 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
     public ChatAdapter(OnChatClickListener chatClickListener) {
         this.chatList = chatList;
         this.chatClickListener = chatClickListener;
+        this.currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
     }
 
     @NonNull
@@ -43,7 +46,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
     @Override
     public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
         Chat chat = chatList.get(position);
-        holder.personaTitle.setText(chat.getPersonaTitle());
+        holder.personaTitle.setText(chat.getPersonaName());
         holder.lastMessage.setText(chat.getLastMessage());
         holder.itemView.setOnClickListener(v -> chatClickListener.onChatClick(chat));
     }
@@ -68,6 +71,8 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
             notifyDataSetChanged();  // Notify the adapter about data change
         }
     }
+
+
 
 
     public static class ChatViewHolder extends RecyclerView.ViewHolder {

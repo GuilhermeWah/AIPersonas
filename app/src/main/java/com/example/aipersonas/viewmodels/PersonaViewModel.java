@@ -33,12 +33,11 @@ public class PersonaViewModel extends AndroidViewModel {
         allPersonas = personaRepository.getAllPersonas();
     }
 
-    public void tailorPersonaDescription(String personaId, String description) {
+/*    public void tailorPersonaDescription(String personaId, String personaDescription) {
         Log.d(TAG, "Tailoring description with GPT-3.5");
 
-
         // Call the method from GPTRepository to handle the request
-        gptRepository.sendGPTRequest(description,400, 0.6F,new GPTRepository.ApiCallback() {
+        gptRepository.sendGPTRequest(personaDescription,300, 0.6F,new GPTRepository.ApiCallback() {
             @Override
             public void onSuccess(String response) {
                 try {
@@ -53,8 +52,16 @@ public class PersonaViewModel extends AndroidViewModel {
                         Log.d(TAG, "GPT tailored description received: " + tailoredDescription);
 
                         // Store tailored description in Firestore and Room
-                        personaRepository.updatePersonaDescription(personaId, tailoredDescription, description);
+                        personaRepository.updatePersonaDescription(personaId, tailoredDescription, personaDescription);
                         tailoredDescriptionLiveData.postValue(tailoredDescription);
+
+                        Persona persona = personaRepository.getPersonaByIdSync(personaId);
+                        if (persona != null) {
+                            persona.setGptDescription(tailoredDescription);
+                            personaRepository.update(persona); // Update Room and Firestore
+                            Log.d(TAG, "Persona updated with tailored description.");
+                        }
+
                     } else {
                         Log.e(TAG, "No choices found in GPT response.");
                     }
@@ -70,8 +77,7 @@ public class PersonaViewModel extends AndroidViewModel {
             }
         });
     }
-
-
+*/
 
 
 
@@ -83,10 +89,6 @@ public class PersonaViewModel extends AndroidViewModel {
         personaRepository.insert(persona);
     }
 
-    public LiveData<String> getTailoredDescriptionLiveData() {
-        return tailoredDescriptionLiveData;
-    }
-
     public void delete(Persona persona, PersonaRepository.FirestoreCallback callback) {
         personaRepository.delete(persona, callback);
     }
@@ -95,15 +97,25 @@ public class PersonaViewModel extends AndroidViewModel {
         return personaRepository.getPersonaById(personaId);
     }
 
-    public LiveData<String> getTailoredDescription() {
-        return tailoredDescriptionLiveData;
+    public void updatePersonaDescription(String personaId, String description) {
+        personaRepository.updatePersonaDescription(personaId, description, description);
     }
 
-    public void updatePersonaDescription(String personaId, String tailoredDescription) {
-        personaRepository.updatePersonaDescription(personaId, tailoredDescription, "" );
+    public void tailorPersonaDescription(String personaId, String description) {
+        personaRepository.tailorPersonaDescription(personaId, description, new PersonaRepository.TailoringCallback() {
+            @Override
+            public void onSuccess(String tailoredDescription) {
+                // Update the live data so the UI can be updated accordingly
+                tailoredDescriptionLiveData.postValue(tailoredDescription);
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Log.e(TAG, "Failed to tailor persona description: " + error);
+                // Handle error appropriately, e.g., show a Toast to the user
+            }
+        });
     }
-
-
 
 
 }

@@ -55,6 +55,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
         chatListAdapter = new ChatListAdapter(this);
         chatListRecyclerView.setAdapter(chatListAdapter);
         chatListRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        addChatButton = findViewById(R.id.add_chat_fab);
 
         // Get personaId from the intent
         String personaId = null;
@@ -80,7 +81,6 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
         Log.d("ChatListActivity", "Persona ID received: " + personaId);
 
         if (personaId != null) {
-            chatListViewModel = new ViewModelProvider(this).get(ChatListViewModel.class);
             chatListViewModel.getChatsForPersona(personaId).observe(this, chats -> {
                 chatListAdapter.setChatList(chats);
             });
@@ -89,17 +89,23 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
             Toast.makeText(this, "Persona not found", Toast.LENGTH_SHORT).show();
         }
 
-        addChatButton = findViewById(R.id.add_chat_fab);
-
         addChatButton.setOnClickListener(v -> {
             if (currentPersona != null) {
                 // Create a new chat here
-                Chat newChat = new Chat(userId, currentPersona.getPersonaId(), currentPersona.getName(), "New Chat", new Timestamp(new Date()));
-                chatListViewModel.insert(newChat, currentPersona.getPersonaId());
+                Chat newChat = new Chat(
+                        userId,
+                        currentPersona.getPersonaId(),
+                        currentPersona.getName(),
+                        "New Chat",                       // lastMessage
+                        Timestamp.now(), // lastMessageTime (using current time)
+                        true,                             // isActive (e.g., true to indicate active chat)
+                        "active"                          // status (e.g., "active" or some other appropriate status)
+                );
+                chatListViewModel.insert(newChat);
 
-                Toast.makeText(ChatListActivity.this, "Chat added successfully!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ChatListActivity.this, "Chat created successfully", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(ChatListActivity.this, "No persona selected. Please try again.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ChatListActivity.this, "Persona not found", Toast.LENGTH_SHORT).show();
             }
         });
     }

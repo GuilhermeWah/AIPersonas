@@ -11,7 +11,6 @@ import com.google.firebase.Timestamp;
 
 import java.util.UUID;
 
-
 @Entity(tableName = "message_table")
 @TypeConverters(Converters.class) // Handle complex types like Timestamp
 public class Message {
@@ -20,26 +19,29 @@ public class Message {
     @NonNull
     private String messageId;
     private String chatId;
-    private String senderId;
-    private String content;
-    private Timestamp timestamp;
-    private boolean isSent;
+    private String senderId; // Could be "user" or "GPT"
+    private String messageContent; // User's message
+    private String gptResponse; // GPT's response
+    private Timestamp timestamp; // User's message timestamp
+    private Timestamp responseTimestamp; // When GPT responded
+    private String status; // e.g., "sent", "typing", "received", "completed"
 
-
-    // non arg constructor required by Firestore
+    // non-arg constructor required by Firestore
     public Message() {
         this.messageId = UUID.randomUUID().toString();
     }
 
+
+
     // Parameterized constructor for creating a Message instance
     @Ignore
-    public Message(String chatId, String senderId, String content, Timestamp timestamp, boolean isSent) {
+    public Message(String chatId, String senderId, String messageContent, Timestamp timestamp, String status) {
         this.messageId = UUID.randomUUID().toString();
         this.chatId = chatId;
-        this.senderId = senderId; // Fixed parameter name to match the field
-        this.content = content;
+        this.senderId = senderId;
+        this.messageContent = messageContent;
         this.timestamp = timestamp;
-        this.isSent = isSent;
+        this.status = status;
     }
 
     // Getters and Setters
@@ -68,12 +70,12 @@ public class Message {
         this.senderId = senderId;
     }
 
-    public String getContent() {
-        return content;
+    public String getMessageContent() {
+        return messageContent;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setMessageContent(String messageContent) {
+        this.messageContent = messageContent;
     }
 
     public Timestamp getTimestamp() {
@@ -84,12 +86,33 @@ public class Message {
         this.timestamp = timestamp;
     }
 
-    public boolean isSent() {
-        return isSent;
+    public String getStatus() {
+        return status;
     }
 
-    public void setSent(boolean sent) {
-        isSent = sent;
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    // Additional getter for personaId if necessary
+    public String getPersonaId() {
+        return this.senderId;  // Assuming the persona ID is stored in the senderId field
+    }
+
+    public String getGptResponse() {
+        return gptResponse;
+    }
+
+    public void setGptResponse(String gptResponse) {
+        this.gptResponse = gptResponse;
+    }
+
+    public Timestamp getResponseTimestamp() {
+        return responseTimestamp;
+    }
+
+    public void setResponseTimestamp(Timestamp responseTimestamp) {
+        this.responseTimestamp = responseTimestamp;
     }
 
     @Override
@@ -98,9 +121,13 @@ public class Message {
                 "messageId='" + messageId + '\'' +
                 ", chatId='" + chatId + '\'' +
                 ", senderId='" + senderId + '\'' +
-                ", content='" + content + '\'' +
+                ", messageContent='" + messageContent + '\'' +
+                ", gptResponse='" + gptResponse + '\'' +
                 ", timestamp=" + timestamp +
-                ", isSent=" + isSent +
+                ", responseTimestamp=" + responseTimestamp +
+                ", status='" + status + '\'' +
                 '}';
     }
+
+
 }
