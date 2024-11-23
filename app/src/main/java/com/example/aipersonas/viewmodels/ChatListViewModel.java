@@ -8,6 +8,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.aipersonas.databases.ChatDatabase;
 import com.example.aipersonas.models.Chat;
 import com.example.aipersonas.repositories.ChatRepository;
 import com.example.aipersonas.repositories.APIConfigRepository;
@@ -25,26 +26,30 @@ public class ChatListViewModel extends AndroidViewModel {
 
     public ChatListViewModel(@NonNull Application application, String personaId) {
         super(application);
-        repository = new ChatRepository(application, personaId);
+
+        // Get instance of ChatDatabase and pass ChatDAO to the repository
+        ChatDatabase db = ChatDatabase.getInstance(application);
+        repository = new ChatRepository(db.chatDao());
+
+        // Assuming this method requires a personaId argument, provide it as needed
         allChats = repository.getChatsForPersona(personaId);
 
         // Retrieve API keys from APIConfigRepository
-        APIConfigRepository apiConfigRepository;
-        apiConfigRepository = new APIConfigRepository(application);
+        APIConfigRepository apiConfigRepository = new APIConfigRepository(application);
         gptApiKey = apiConfigRepository.getGPTKey();
     }
 
     // Chat CRUD operations
-    public void insert(Chat chat, String personaId) {
-        repository.insert(chat, personaId);
+    public void insert(Chat chat) {
+        repository.insertChat(chat);
     }
 
-    public void update(Chat chat, String personaId) {
-        repository.update(chat, personaId);
+    public void update(Chat chat) {
+        repository.updateChat(chat);
     }
 
-    public void delete(Chat chat, String personaId) {
-        repository.delete(chat, personaId);
+    public void delete(Chat chat) {
+        repository.deleteChat(chat);
     }
 
     public LiveData<List<Chat>> getChatsForPersona(String personaId) {
@@ -55,28 +60,5 @@ public class ChatListViewModel extends AndroidViewModel {
         return gptApiKey;
     }
 
-    // Handle sending a message to GPT
-    public void sendMessageToGPT(String message, String personaId, String chatId) {
-
-            if (gptApiKey != null) {
-                // Call the repository method
-                repository.sendMessageToGPT(message, personaId, chatId, gptApiKey, new ChatRepository.ApiCallback() {
-                    @Override
-                    public void onSuccess(String response) {
-                        // Insert GPT's response into the chat repository
-                        repository.insert(new Chat(chatId, personaId, response), personaId);
-                    }
-
-                    @Override
-                    public void onFailure(String error) {
-                        Log.e(TAG, "Failed to get response from GPT: " + error);
-                        errorLiveData.postValue(error);
-                    }
-                });
-            } else {
-                Log.e(TAG, "GPT key is null");
-                errorLiveData.postValue("GPT key is null");
-            }
-    }
 
 }

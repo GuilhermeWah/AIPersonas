@@ -1,5 +1,7 @@
 package com.example.aipersonas.activities;
 
+import static android.content.ContentValues.TAG;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -159,22 +161,10 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
 
                     if (!title.isEmpty() && !description.isEmpty()) {
                         Persona newPersona = new Persona(title, description);
-                        // Insert the persona into the database
+                        // Insert the persona using ViewModel
                         personaViewModel.insert(newPersona);
-
-                        // Ask the user if they want to improve the description
-                        new AlertDialog.Builder(this)
-                                .setTitle("Improve Description")
-                                .setMessage("Do you want us to improve this description for you? For a better experience?")
-                                .setPositiveButton("Yes", (innerDialog, innerWhich) -> {
-                                    // Call GPT API to tailor the description
-                                    personaViewModel.tailorPersonaDescription(newPersona.getPersonaId(), description);
-                                })
-                                .setNegativeButton("No", (innerDialog, innerWhich) -> {
-                                    // Store the original description without tailoring
-                                    personaRepository.storePersonaDescription(newPersona.getPersonaId(), description);
-                                })
-                                .show();
+                        // Call GPT API to tailor the description using ViewModel
+                        personaViewModel.tailorPersonaDescription(newPersona.getPersonaId(), description);
 
                         Toast.makeText(MainActivity.this, "Persona created successfully!", Toast.LENGTH_SHORT).show();
                     } else {
@@ -185,6 +175,10 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
                 .create()
                 .show();
     }
+
+
+
+
 
 
 

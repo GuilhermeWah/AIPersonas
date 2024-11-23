@@ -8,6 +8,8 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import com.example.aipersonas.databases.ChatDAO;
+import com.example.aipersonas.databases.ChatDatabase;
 import com.example.aipersonas.models.Chat;
 import com.example.aipersonas.models.Message;
 import com.example.aipersonas.repositories.ChatRepository;
@@ -22,72 +24,87 @@ public class ChatViewModel extends AndroidViewModel {
     private static final String TAG = "ChatViewModel";
     private final ChatRepository chatRepository;
     private final GPTRepository gptRepository;
-    private final LiveData<List<Chat>> chatsForCurrentChat;
+    private final LiveData<List<Message>> messagesForChat;
     private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
-    private final String personaId;
     private final String chatId;
 
-    public ChatViewModel(@NonNull Application application, String personaId, String chatId) {
+    public ChatViewModel(@NonNull Application application, String chatId) {
         super(application);
 
-        this.chatRepository = new ChatRepository(application, personaId);
-        this.gptRepository = new GPTRepository(application); // Initialize GPTRepository
+        // Get the instance of ChatDatabase and then get ChatDAO from it
+        ChatDatabase chatDatabase = ChatDatabase.getInstance(application);
+        ChatDAO chatDAO = chatDatabase.chatDao();
+
+        // Pass the ChatDAO to the repository
+        this.chatRepository = new ChatRepository(chatDAO);
+        this.gptRepository = new GPTRepository(application);
         this.chatId = chatId;
-        this.personaId = personaId;
 
-        // Initialize LiveData objects
-        chatsForCurrentChat = chatRepository.getChatsForPersona(personaId);
+        // Initialize LiveData for messages related to the current chat
+        messagesForChat = chatRepository.getMessagesForChat(chatId);
     }
 
-    public LiveData<List<Chat>> getChatsForCurrentChat() {
-        return chatsForCurrentChat;
-    }
-
-    public LiveData<List<Message>> getMessagesForChat(String chatId) {
-        return chatRepository.getMessagesForChat(chatId); // Ensure this method exists in the repository
+    public LiveData<List<Message>> getMessagesForChat() {
+        return messagesForChat;
     }
 
     public LiveData<String> getErrorLiveData() {
         return errorLiveData;
     }
 
-    public void sendMessage(String message, String personaId, String chatId) {
+    public void sendMessage(String message) {
         Log.d(TAG, "[CVM] sendMessage called with message: " + message);
+
+        // Create and insert the user message into Firestore and Room
+        Message userMessage = new Message(
+                chatId,
+                getUserId(),
+                message,
+                Timestamp.now(),
+                "sent"
+        );
+        chatRepository.insertMessage(userMessage);
+
+        // Set "typing" status while waiting for GPT response
+        setMessageStatus("typing");
 
         // Use GPTRepository to handle GPT API interaction
         gptRepository.sendGPTRequest(message, 150, 0.7f, new GPTRepository.ApiCallback() {
             @Override
             public void onSuccess(String response) {
                 Log.d(TAG, "GPT Response: " + response);
-                Chat responseChat = new Chat(
-                        personaId,
+                Message responseMessage = new Message(
                         chatId,
                         "GPT",
                         response,
-                        Timestamp.now()
+                        Timestamp.now(),
+                        "received"
                 );
-                chatRepository.insert(responseChat, personaId);
+                chatRepository.insertMessage(responseMessage);
+                setMessageStatus("idle");
             }
 
             @Override
             public void onFailure(String error) {
                 Log.e(TAG, "Failed to get GPT response: " + error);
                 errorLiveData.postValue(error);
+                setMessageStatus("idle");
             }
         });
     }
 
-
-    public void insert(Chat chat, String personaId) {
-        chatRepository.insert(chat, personaId);
+    private void setMessageStatus(String status) {
+        // Logic for setting the "typing" or "idle" status in Firestore.
+        chatRepository.updateMessageStatus(chatId, status);
     }
 
-    public void update(Chat chat, String personaId) {
-        chatRepository.update(chat, personaId);
+    public void insertMessage(Message message) {
+        chatRepository.insertMessage(message);
     }
 
-    public void delete(Chat chat, String personaId) {
-        chatRepository.delete(chat, personaId);
+    public void deleteMessage(Message message) {
+        // Update to delete the message by message ID (since deleteMessage expects a String parameter)
+        chatRepository.deleteMessage(message);
     }
 
     public String getUserId() {

@@ -1,5 +1,7 @@
 package com.example.aipersonas.activities;
 
+import static com.example.aipersonas.R.layout.activity_chat;
+
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
@@ -39,7 +41,7 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chat);
+        setContentView(activity_chat);
 
         // Initialize views
         sendButton = findViewById(R.id.buttonSendMessage);
@@ -82,14 +84,14 @@ public class ChatActivity extends AppCompatActivity {
                     return;
                 }
                 Log.e("ChatActivity", "ViewModel initialized, sending message.");
-                chatViewModel.sendMessage(message, personaId, chatId);
+                //chatViewModel.sendMessage(message, personaId, chatId);
                 messageInput.setText("");
             }
         });
     }
 
     private void observeMessages() {
-        chatViewModel.getMessagesForChat(chatId).observe(this, messages -> {
+        chatViewModel.getMessagesForChat().observe(this, messages -> {
 
             messageRecyclerView.setAdapter(messageAdapter);
             Log.d("ChatActivity", "Messages size: " + messages.size());
@@ -103,21 +105,4 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
-
-private void sendMessage(String messageContent) {
-    Log.d("ChatActivity", "sendMessage called with content: " + messageContent);
-    Chat chat = new Chat();
-    chat.setChatId(chatId);
-    chat.setPersonaId(personaId);
-    chat.setUserId(chatViewModel.getUserId()); // Assume ViewModel provides the current user ID
-    chat.setLastMessage(messageContent);
-    chat.setTimestamp(Timestamp.now());
-
-    // Save message via ViewModel
-    chatViewModel.insert(chat, personaId);
-
-    String apiKey = chatViewModel.getGptApiKey();
-    Log.d("ChatActivity", "API Key: " + apiKey);
-    chatViewModel.sendMessage(messageContent, personaId, chatId);
-}
 }

@@ -1,5 +1,6 @@
 package com.example.aipersonas.adapters;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -52,7 +53,9 @@ public class PersonaAdapter extends RecyclerView.Adapter<PersonaAdapter.PersonaV
     public void onBindViewHolder(@NonNull PersonaViewHolder holder, int position) {
         Persona persona = personaList.get(position);
         holder.title.setText(persona.getName());
-        holder.description.setText(persona.getDescription());
+        Log.d("Adapter", "Binding persona at position: " + position + ", name: " + persona.getName() + ", description: " + persona.getPersonaDescription());
+
+        holder.description.setText(persona.getPersonaDescription()); // Display only the user-provided description
 
         holder.itemView.setOnClickListener(v -> chatClickListener.onPersonaClick(persona));
         holder.itemView.setOnLongClickListener(v -> {

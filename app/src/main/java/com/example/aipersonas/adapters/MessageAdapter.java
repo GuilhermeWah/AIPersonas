@@ -37,7 +37,7 @@ public class MessageAdapter extends RecyclerView.Adapter<MessageAdapter.MessageV
     @Override
     public void onBindViewHolder(@NonNull MessageViewHolder holder, int position) {
         Message message = messages.get(position);
-        holder.messageTextView.setText(message.getContent()); // Use `getContent()` from Message
+        holder.messageTextView.setText(message.getMessageContent()); // Use `getContent()` from Message
         holder.timestampTextView.setText(formatTimestamp(message.getTimestamp().toDate().getTime())); // Convert Firestore Timestamp
     }
 

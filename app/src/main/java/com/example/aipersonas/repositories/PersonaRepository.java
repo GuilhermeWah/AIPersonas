@@ -15,6 +15,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -24,6 +28,7 @@ public class PersonaRepository {
     private PersonaDAO personaDAO;
     private LiveData<List<Persona>> allPersonas;
     private FirebaseFirestore firebaseFirestore;
+    private GPTRepository gptRepository;
     private String userId;
 
     // Executor for async database tasks
@@ -44,6 +49,9 @@ public class PersonaRepository {
 
         // Initialize executor
         executor = Executors.newSingleThreadExecutor();
+
+        // Initialize GPTRepository
+        gptRepository = new GPTRepository(application);
 
         // Fetch data from Firestore if online
         if (NetworkUtils.isNetworkAvailable(application.getApplicationContext())) {
@@ -66,6 +74,10 @@ public class PersonaRepository {
     public LiveData<Persona> getPersonaById(String personaId) {
         // Now use the initialized personaDAO instance
         return personaDAO.getPersonaById(personaId);
+    }
+
+    public Persona getPersonaByIdSync(String personaId) {
+        return personaDAO.getPersonaByIdSync(personaId);
     }
 
 // Fetch personas from Firestore and cache them in Room
@@ -94,7 +106,7 @@ private void fetchPersonasFromFirestore() {
             });
 }
 
-    public void updatePersonaDescription(String personaId, String tailoredDescription, String originalDescription) {
+    public void updatePersonaDescription(String personaId, String tailoredDescription, String description) {
         Log.d(TAG, "Updating persona description in Firestore and Room: " + tailoredDescription);
 
         // Update the descriptions in Firestore
@@ -103,7 +115,7 @@ private void fetchPersonasFromFirestore() {
                 .collection("Personas")
                 .document(personaId)
                 .update(
-                        "userDescription", originalDescription,
+                        "personaDescription", description,
                         "gptDescription", tailoredDescription
                 )
                 .addOnSuccessListener(aVoid -> Log.d(TAG, "Persona descriptions updated successfully in Firestore."))
@@ -112,7 +124,7 @@ private void fetchPersonasFromFirestore() {
         executor.execute(() -> {
             Persona persona = personaDAO.getPersonaByIdSync(personaId);
             if (persona != null) {
-                persona.setDescription(originalDescription);
+                persona.setPersonaDescription(description);
                 persona.setGptDescription(tailoredDescription);
                 personaDAO.update(persona);
                 Log.d(TAG, "Persona descriptions updated successfully in Room.");
@@ -122,30 +134,53 @@ private void fetchPersonasFromFirestore() {
         });
     }
 
-    public void storePersonaDescription(String personaId, String tailoredDescription) {
-        Log.d(TAG, "Storing tailored persona description in Firestore and Room: " + tailoredDescription);
 
-        // Update Firestore
-        firebaseFirestore.collection("Users")
-                .document(userId)
-                .collection("Personas")
-                .document(personaId)
-                .update("description", tailoredDescription)
-                .addOnSuccessListener(aVoid -> Log.d(TAG, "Persona description stored successfully in Firestore."))
-                .addOnFailureListener(e -> Log.e(TAG, "Error storing persona description in Firestore: ", e));
 
-        // Update Room
-        executor.execute(() -> {
-            Persona persona = personaDAO.getPersonaByIdSync(personaId);
-            if (persona != null) {
-                persona.setDescription(tailoredDescription);
-                personaDAO.update(persona);
-                Log.d(TAG, "Persona description stored successfully in Room.");
-            } else {
-                Log.e(TAG, "Persona not found in Room with ID: " + personaId);
+    public void tailorPersonaDescription(String personaId, String description, TailoringCallback callback) {
+        // Parameters
+        int maxTokens = 750;
+        float temperature = 0.7F;
+
+        // Call GPT Repository method
+        gptRepository.sendGPTRequest(description, maxTokens, temperature, new GPTRepository.ApiCallback() {
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    JSONObject jsonResponse = new JSONObject(response);
+                    JSONArray choices = jsonResponse.getJSONArray("choices");
+                    if (choices.length() > 0) {
+                        JSONObject choice = choices.getJSONObject(0);
+                        JSONObject message = choice.getJSONObject("message");
+                        String tailoredDescription = message.getString("content");
+
+                        Log.d(TAG, "GPT tailored description received: " + tailoredDescription);
+
+                        // Store tailored description in Firestore and Room
+                        updatePersonaDescription(personaId, tailoredDescription, description);
+                        callback.onSuccess(tailoredDescription);
+                    } else {
+                        callback.onFailure("No choices found in GPT response.");
+                    }
+                } catch (JSONException e) {
+                    callback.onFailure("Failed to parse GPT response: " + e.getMessage());
+                }
+            }
+
+            @Override
+            public void onFailure(String error) {
+                Log.e(TAG, "Failed to tailor persona description: " + error);
+                callback.onFailure(error);
             }
         });
     }
+
+
+
+    public interface TailoringCallback {
+        void onSuccess(String tailoredDescription);
+        void onFailure(String error);
+    }
+
 
     // Method to insert a Persona
     public void insert(Persona persona) {

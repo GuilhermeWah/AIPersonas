@@ -86,15 +86,16 @@ public class GPTRepository {
     }
 
 
-    // Helper to build request body for chat models
-    private String buildGPTRequestBody(String description, int maxTokens, float temperature) {
-        String instruction = "You are an AI language model tasked with tailoring persona descriptions for user-facing virtual assistants. " +
-                "The purpose of tailoring this persona description is to help GPT effectively maintain context throughout interactions with the user, " +
-                "and to ensure that the virtual assistant provides responses that are highly relevant, personalized, and context-aware. " +
-                "Your goal is to refine the given persona description by making it more engaging, precise, and informative. " +
-                "Highlight the persona's role, key expertise, personality traits, motivation, and interaction style. " +
-                "Make sure the refined description supports consistency, context retention, and user engagement, while maintaining a balance between professionalism and approachability.";
+    //@TODO: Documenting this function
+    public String buildGPTRequestBody(String description, int maxTokens, float temperature) {
+        String instruction = "You are tasked with refining the persona description provided for internal use only. "
+                + "This refined description is intended to optimize GPT's understanding and simulation of the persona during user interactions. "
+                + "The purpose is to make the persona more effective in responding to user queries by capturing key skills, expertise, personality traits, motivations, and communication style. "
+                + "This internal version should help GPT maintain context, exhibit consistent personality traits, and respond in a manner that aligns with the persona’s defined characteristics throughout all interactions. "
+                + "Make sure to emphasize the persona's role, capabilities, motivations, and approach to communication, ensuring the resulting description is insightful, comprehensive, and well-structured for internal use by GPT. "
+                + "The refined description will not be displayed to the user but will be used solely to guide GPT's behavior in conversations.";
 
+        // Constructing the JSON request body
         return "{"
                 + "\"model\":\"gpt-3.5-turbo\","
                 + "\"messages\":["
@@ -105,6 +106,7 @@ public class GPTRepository {
                 + "\"temperature\":" + temperature
                 + "}";
     }
+
 
 
 
