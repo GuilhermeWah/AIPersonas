@@ -4,6 +4,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
 
 import com.example.aipersonas.databases.ChatDAO;
 import com.example.aipersonas.models.Chat;
@@ -16,6 +17,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,9 +34,7 @@ public class ChatRepository {
 
     // Real-time listener for chats
     private ListenerRegistration chatListener;
-
-
-
+    private final MutableLiveData<List<Chat>> allChatsLiveData;
 
     public ChatRepository(ChatDAO chatDAO) {
         this.chatDAO = chatDAO;
@@ -42,8 +42,9 @@ public class ChatRepository {
         executor = Executors.newSingleThreadExecutor();
         userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         usersCollection = firebaseFirestore.collection("Users");
-    }
+        allChatsLiveData = new MutableLiveData<>();
 
+    }
     // Insert a chat into both Firestore and Room
     public void insertChat(Chat chat) {
         executor.execute(() -> {
@@ -103,32 +104,38 @@ public class ChatRepository {
                 .addOnFailureListener(e -> Log.e(TAG, "Error fetching chats from Firestore", e));
     }
 
-    // Add a real-time listener for chats
-    public void addChatListener(String personaId) {
-        chatListener = firebaseFirestore.collection("Users")
-                .document(userId)
-                .collection("Chats")
-                .whereEqualTo("personaId", personaId)
-                .addSnapshotListener((queryDocumentSnapshots, e) -> {
-                    if (e != null) {
-                        Log.e(TAG, "Listen failed.", e);
-                        return;
-                    }
+    // Method to listen to chats in real-time from Firestore
+    public void listenToChats(String personaId) {
+        CollectionReference chatsRef = firebaseFirestore
+                .collection("Users")
+                .document(FirebaseAuth.getInstance().getUid())
+                .collection("Personas")
+                .document(personaId)
+                .collection("Chats");
 
-                    if (queryDocumentSnapshots != null) {
-                        executor.execute(() -> {
-                            chatDAO.deleteAllChatsForPersona(personaId);
-                            for (DocumentSnapshot document : queryDocumentSnapshots) {
-                                Chat chat = document.toObject(Chat.class);
-                                chatDAO.insertChat(chat);
-                            }
-                        });
+         chatListener = chatsRef.addSnapshotListener((queryDocumentSnapshots, e) -> {
+            if (e != null) {
+                Log.w(TAG, "Listen failed.", e);
+                return;
+            }
+
+            executor.execute(() -> {
+                if (queryDocumentSnapshots != null) {
+                    List<Chat> chatList = new ArrayList<>();
+                    for (DocumentSnapshot document : queryDocumentSnapshots) {
+                        Chat chat = document.toObject(Chat.class);
+                        if (chat != null) {
+                            chatList.add(chat);
+                            chatDAO.insertChat(chat);  // Update Room with the latest chat data
+                        }
                     }
-                });
+                    allChatsLiveData.postValue(chatList);
+                }
+            });
+        });
     }
 
-    // Remove the real-time listener when no longer needed
-    public void removeChatListener() {
+    public void stopListeningToChats() {
         if (chatListener != null) {
             chatListener.remove();
             chatListener = null;
@@ -144,33 +151,67 @@ public class ChatRepository {
      */
 
     // Insert a message into both Firestore and Room
-    public void addMessage(@NonNull String userId, @NonNull String personaId, @NonNull String chatId, @NonNull Message message) {
+    public void addMessage(@NonNull Message message) {
+        if (userId == null || message.getPersonaId() == null || message.getChatId() == null) {
+            Log.e(TAG, "Invalid IDs: userId=" + userId + ", personaId=" + message.getPersonaId() + ", chatId=" + message.getChatId());
+            return;
+        }
+
         usersCollection
                 .document(userId)
+                .collection("Personas")
+                .document(message.getPersonaId())
+                .collection("Chats")
+                .document(message.getChatId())
+                .collection("Messages")
+                .document(message.getMessageId())
+                .set(message)
+                .addOnSuccessListener(aVoid -> Log.d(TAG, "Message added successfully to Firestore"))
+                .addOnFailureListener(e -> Log.e(TAG, "Error adding message to Firestore", e));
+    }
+
+
+
+    // Listen to messages in real-time from Firestore
+    public void listenToMessages(String personaId, String chatId) {
+        CollectionReference messagesRef = firebaseFirestore
+                .collection("Users")
+                .document(FirebaseAuth.getInstance().getUid())
                 .collection("Personas")
                 .document(personaId)
                 .collection("Chats")
                 .document(chatId)
-                .collection("Messages")
-                .document(message.getMessageId())
-                .set(message)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "Message added successfully to Firestore");
+                .collection("Messages");
+
+        messagesRef.addSnapshotListener((queryDocumentSnapshots, e) -> {
+            if (e != null) {
+                Log.w(TAG, "Listen failed.", e);
+                return;
+            }
+            executor.execute(() -> {
+                if (queryDocumentSnapshots != null) {
+                    List<Message> messageList = new ArrayList<>();
+                    for (DocumentSnapshot document : queryDocumentSnapshots) {
+                        Message message = document.toObject(Message.class);
+                        if (message != null) {
+                            messageList.add(message);
+                            chatDAO.insertMessage(message);  // Update Room with the latest message data
+                        }
                     }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.e(TAG, "Error adding message to Firestore", e);
-                    }
-                });
+                }
+            });
+        });
     }
+
 
     // Get all messages for a specific chat
     public LiveData<List<Message>> getMessagesForChat(String chatId) {
         return chatDAO.getMessagesForChat(chatId);
+    }
+
+    // Method to get all chats live data
+    public LiveData<List<Chat>> getAllChats() {
+        return allChatsLiveData;
     }
 
     // Update a message's status in both Firestore and Room

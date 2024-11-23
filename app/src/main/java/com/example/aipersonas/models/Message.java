@@ -18,17 +18,20 @@ public class Message {
     @PrimaryKey
     @NonNull
     private String messageId;
-    private String userId;
     private String chatId;
-    private String senderId; // Could be "user" or "persona"
-    private String messageContent;
-    private Timestamp timestamp;
-    private String status; // e.g., "sent", "delivered", "read", "typing"
+    private String senderId; // Could be "user" or "GPT"
+    private String messageContent; // User's message
+    private String gptResponse; // GPT's response
+    private Timestamp timestamp; // User's message timestamp
+    private Timestamp responseTimestamp; // When GPT responded
+    private String status; // e.g., "sent", "typing", "received", "completed"
 
     // non-arg constructor required by Firestore
     public Message() {
         this.messageId = UUID.randomUUID().toString();
     }
+
+
 
     // Parameterized constructor for creating a Message instance
     @Ignore
@@ -49,14 +52,6 @@ public class Message {
 
     public void setMessageId(@NonNull String messageId) {
         this.messageId = messageId;
-    }
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
     }
 
     public String getChatId() {
@@ -104,6 +99,22 @@ public class Message {
         return this.senderId;  // Assuming the persona ID is stored in the senderId field
     }
 
+    public String getGptResponse() {
+        return gptResponse;
+    }
+
+    public void setGptResponse(String gptResponse) {
+        this.gptResponse = gptResponse;
+    }
+
+    public Timestamp getResponseTimestamp() {
+        return responseTimestamp;
+    }
+
+    public void setResponseTimestamp(Timestamp responseTimestamp) {
+        this.responseTimestamp = responseTimestamp;
+    }
+
     @Override
     public String toString() {
         return "Message{" +
@@ -111,8 +122,12 @@ public class Message {
                 ", chatId='" + chatId + '\'' +
                 ", senderId='" + senderId + '\'' +
                 ", messageContent='" + messageContent + '\'' +
+                ", gptResponse='" + gptResponse + '\'' +
                 ", timestamp=" + timestamp +
+                ", responseTimestamp=" + responseTimestamp +
                 ", status='" + status + '\'' +
                 '}';
     }
+
+
 }

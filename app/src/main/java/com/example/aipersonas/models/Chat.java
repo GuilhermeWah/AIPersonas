@@ -18,6 +18,8 @@ public class Chat {
     private String personaId;
     private String personaName;
     private String lastMessage;
+    private String chatSummary;
+    private Timestamp lastSummaryTime;
     private Timestamp lastMessageTime;
     private boolean isActive;
     private String status;
@@ -26,6 +28,8 @@ public class Chat {
     public Chat() {
         this.chatId = UUID.randomUUID().toString();
     }
+
+
 
     // Parameterized constructor for other uses
     @Ignore
@@ -105,4 +109,21 @@ public class Chat {
     public void setStatus(String status) {
         this.status = status;
     }
+
+    public String getChatSummary() {
+        return chatSummary;
+    }
+
+    public void setChatSummary(String chatSummary) {
+        this.chatSummary = chatSummary;
+    }
+
+    public Timestamp getLastSummaryTime() {
+        return lastSummaryTime;
+    }
+
+    public void setLastSummaryTime(Timestamp lastSummaryTime) {
+        this.lastSummaryTime = lastSummaryTime;
+    }
+
 }

@@ -18,6 +18,8 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ChatViewModel extends AndroidViewModel {
 
@@ -26,6 +28,8 @@ public class ChatViewModel extends AndroidViewModel {
     private final GPTRepository gptRepository;
     private final LiveData<List<Message>> messagesForChat;
     private final MutableLiveData<String> errorLiveData = new MutableLiveData<>();
+    private final LiveData<List<Chat>> allChatsLiveData;
+    private final ExecutorService executor;
     private final String chatId;
 
     public ChatViewModel(@NonNull Application application, String chatId) {
@@ -39,10 +43,41 @@ public class ChatViewModel extends AndroidViewModel {
         this.chatRepository = new ChatRepository(chatDAO);
         this.gptRepository = new GPTRepository(application);
         this.chatId = chatId;
+        this.executor = Executors.newSingleThreadExecutor();
 
         // Initialize LiveData for messages related to the current chat
         messagesForChat = chatRepository.getMessagesForChat(chatId);
+        allChatsLiveData = chatRepository.getAllChats();;
+
     }
+
+    public void sendMessageToGPT(String messageContent, GPTRepository.ApiCallback callback) {
+        gptRepository.sendGPTRequest(messageContent, 500, 0.7f, callback);
+    }
+
+    public void sendMessage(Message message) {
+        executor.execute(() -> chatRepository.addMessage(message)); // Save to Room
+        chatRepository.addMessage(message); // Save to Firestore
+    }
+
+
+    public LiveData<List<Chat>> getAllChats() {
+        return getAllChats();
+    }
+
+    public void startListeningToChats(String personaId) {
+        chatRepository.listenToChats(personaId);
+    }
+
+    public void stopListeningToChats() {
+        chatRepository.stopListeningToChats();
+    }
+
+    public void startListeningToMessages(String personaId, String chatId) {
+        chatRepository.listenToMessages(personaId, chatId);
+    }
+
+
 
     public LiveData<List<Message>> getMessagesForChat() {
         return messagesForChat;
@@ -50,61 +85,6 @@ public class ChatViewModel extends AndroidViewModel {
 
     public LiveData<String> getErrorLiveData() {
         return errorLiveData;
-    }
-
-    public void sendMessage(String message) {
-        Log.d(TAG, "[CVM] sendMessage called with message: " + message);
-
-        // Create and insert the user message into Firestore and Room
-        Message userMessage = new Message(
-                chatId,
-                getUserId(),
-                message,
-                Timestamp.now(),
-                "sent"
-        );
-        chatRepository.insertMessage(userMessage);
-
-        // Set "typing" status while waiting for GPT response
-        setMessageStatus("typing");
-
-        // Use GPTRepository to handle GPT API interaction
-        gptRepository.sendGPTRequest(message, 150, 0.7f, new GPTRepository.ApiCallback() {
-            @Override
-            public void onSuccess(String response) {
-                Log.d(TAG, "GPT Response: " + response);
-                Message responseMessage = new Message(
-                        chatId,
-                        "GPT",
-                        response,
-                        Timestamp.now(),
-                        "received"
-                );
-                chatRepository.insertMessage(responseMessage);
-                setMessageStatus("idle");
-            }
-
-            @Override
-            public void onFailure(String error) {
-                Log.e(TAG, "Failed to get GPT response: " + error);
-                errorLiveData.postValue(error);
-                setMessageStatus("idle");
-            }
-        });
-    }
-
-    private void setMessageStatus(String status) {
-        // Logic for setting the "typing" or "idle" status in Firestore.
-        chatRepository.updateMessageStatus(chatId, status);
-    }
-
-    public void insertMessage(Message message) {
-        chatRepository.insertMessage(message);
-    }
-
-    public void deleteMessage(Message message) {
-        // Update to delete the message by message ID (since deleteMessage expects a String parameter)
-        chatRepository.deleteMessage(message);
     }
 
     public String getUserId() {

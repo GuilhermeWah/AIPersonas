@@ -9,6 +9,7 @@ import androidx.room.Update;
 
 import com.example.aipersonas.models.Chat;
 import com.example.aipersonas.models.Message;
+import com.example.aipersonas.utils.SummaryUtils;
 
 import java.util.List;
 
@@ -87,4 +88,10 @@ public interface ChatDAO {
     // Get the latest message for a specific chat
     @Query("SELECT * FROM message_table WHERE chatId = :chatId ORDER BY timestamp DESC LIMIT 1")
     Message getLastMessageForChat(String chatId);
+
+    //Get Persona ID For Chat
+    @Query("SELECT personaId FROM chat_table WHERE chatId = :chatId LIMIT 1")
+    String getPersonaIdForChat(String chatId);
+
+
 }
