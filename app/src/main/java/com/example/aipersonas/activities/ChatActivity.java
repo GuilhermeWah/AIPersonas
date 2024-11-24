@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.aipersonas.R;
 import com.example.aipersonas.adapters.MessageAdapter;
+import com.example.aipersonas.databases.ChatDatabase;
 import com.example.aipersonas.models.Chat;
 import com.example.aipersonas.models.Message;
 import com.example.aipersonas.repositories.ChatRepository;
@@ -79,9 +80,11 @@ public class ChatActivity extends AppCompatActivity {
         messageRecyclerView.setAdapter(messageAdapter);
 
         // Initialize ViewModel
-        ChatViewModelFactory factory = new ChatViewModelFactory(getApplication(), personaId, chatId);
+         ChatRepository chatRepository = new ChatRepository(ChatDatabase.getInstance(getApplication()).chatDao());
+        ChatViewModelFactory factory = new ChatViewModelFactory(getApplication(), chatRepository, personaId, chatId);
         ChatViewModel chatViewModel = new ViewModelProvider(this, factory).get(ChatViewModel.class);
         this.chatViewModel = chatViewModel;
+
 
         // Observe messages for the current chat
         observeMessages();
