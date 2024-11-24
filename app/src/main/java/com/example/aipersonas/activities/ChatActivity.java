@@ -140,7 +140,7 @@ public class ChatActivity extends AppCompatActivity {
     }
     private void observeMessages() {
         chatViewModel.getMessagesForChat().observe(this, messages -> {
-
+            messageAdapter.updateMessages(messages);
             messageRecyclerView.setAdapter(messageAdapter);
             Log.d("ChatActivity", "Messages size: " + messages.size());
             //was crashing idk why
