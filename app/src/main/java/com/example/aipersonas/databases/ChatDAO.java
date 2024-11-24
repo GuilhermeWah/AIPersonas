@@ -10,6 +10,7 @@ import androidx.room.Update;
 import com.example.aipersonas.models.Chat;
 import com.example.aipersonas.models.Message;
 import com.example.aipersonas.utils.SummaryUtils;
+import com.google.firebase.Timestamp;
 
 import java.util.List;
 
@@ -52,6 +53,9 @@ public interface ChatDAO {
     @Query("UPDATE chat_table SET lastMessage = :lastMessage, lastMessageTime = :lastMessageTime WHERE chatId = :chatId")
     void updateChatLastMessage(String chatId, String lastMessage, long lastMessageTime);
 
+    // Get message by Sync
+    @Query("SELECT * FROM message_table WHERE messageId = :messageId LIMIT 1")
+    Message getMessageByIdSync(String messageId);
 
     // Update the status of a specific message in the chat
     @Query("UPDATE message_table SET status = :status WHERE messageId = :messageId")
@@ -60,6 +64,9 @@ public interface ChatDAO {
     // Get all messages for a specific chat
     @Query("SELECT * FROM message_table WHERE chatId = :chatId ORDER BY timestamp ASC")
     LiveData<List<Message>> getMessagesForChat(String chatId);
+
+    @Query("SELECT * FROM message_table WHERE chatId = :chatId ORDER BY timestamp ASC")
+    List<Message> getMessagesForChatSync(String chatId); // For synchronous debugging
 
     // Get new messages for a specific chat since the last known timestamp
     @Query("SELECT * FROM message_table WHERE chatId = :chatId AND timestamp > :lastKnownTimestamp ORDER BY timestamp ASC")
@@ -91,7 +98,14 @@ public interface ChatDAO {
 
     //Get Persona ID For Chat
     @Query("SELECT personaId FROM chat_table WHERE chatId = :chatId LIMIT 1")
-    String getPersonaIdForChat(String chatId);
+    LiveData<String> getPersonaIdForChat(String chatId);
+
+    @Query("UPDATE message_table SET gptResponse = :response, responseTimestamp = :timestamp WHERE messageId = :messageId")
+    void updateGPTResponse(String messageId, String response, Timestamp timestamp);
+
+    @Query("UPDATE message_table SET gptResponse = :response, messageContent = :content, responseTimestamp = :timestamp, status = 'received' WHERE messageId = :messageId")
+    void updateGPTResponse(String messageId, String response, String content, Timestamp timestamp);
+
 
 
 }

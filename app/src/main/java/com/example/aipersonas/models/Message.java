@@ -42,6 +42,8 @@ public class Message {
         this.messageContent = messageContent;
         this.timestamp = timestamp;
         this.status = status;
+        this.gptResponse = null;
+        this.responseTimestamp = null;
     }
 
     // Getters and Setters

@@ -6,7 +6,6 @@ import static com.example.aipersonas.R.layout.activity_chat;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -17,18 +16,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.aipersonas.R;
 import com.example.aipersonas.adapters.MessageAdapter;
-import com.example.aipersonas.models.Chat;
 import com.example.aipersonas.models.Message;
-import com.example.aipersonas.repositories.ChatRepository;
-import com.example.aipersonas.repositories.GPTRepository;
 import com.example.aipersonas.viewmodels.ChatViewModel;
-import com.example.aipersonas.viewmodels.ChatListViewModelFactory;
 import com.example.aipersonas.viewmodels.ChatViewModelFactory;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -40,7 +36,7 @@ public class ChatActivity extends AppCompatActivity {
     private String chatId;
     private String personaId;
     private String userId;
-    private List<Message> messages;
+    private final Set<String> messageIds = new HashSet<>(); // Track added message IDs
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,101 +48,117 @@ public class ChatActivity extends AppCompatActivity {
         messageInput = findViewById(R.id.editTextMessage);
         messageRecyclerView = findViewById(R.id.messageRecyclerView);
 
-
         // Retrieve personaId and chatId from intent
-        // Pass personaId from Intent or ViewModel
         personaId = getIntent().getStringExtra("personaId");
-        if (personaId == null) {
-            Log.e(TAG, "Invalid Persona ID.");
-            Toast.makeText(this, "Invalid Persona ID.", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
-        }
-
-        userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         chatId = getIntent().getStringExtra("chatId");
+        userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        if (personaId == null || chatId == null) {
-            Toast.makeText(this, "Invalid Persona or Chat ID", Toast.LENGTH_SHORT).show();
+        if (personaId == null || chatId == null || userId == null) {
+            Log.e(TAG, "Invalid Persona or Chat ID.");
+            Toast.makeText(this, "Invalid Persona or Chat ID.", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
         // Set up RecyclerView
-        // @TODO: Analyze the architecture. Should we be opening this object everytime? fbAuth
-        messageAdapter = new MessageAdapter(this, new ArrayList<Message>());
+        messageAdapter = new MessageAdapter(this, new ArrayList<>());
         messageRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         messageRecyclerView.setAdapter(messageAdapter);
 
         // Initialize ViewModel
         ChatViewModelFactory factory = new ChatViewModelFactory(getApplication(), personaId, chatId);
-        ChatViewModel chatViewModel = new ViewModelProvider(this, factory).get(ChatViewModel.class);
-        this.chatViewModel = chatViewModel;
+        chatViewModel = new ViewModelProvider(this, factory).get(ChatViewModel.class);
 
-        // Observe messages for the current chat
+        // Observe messages
         observeMessages();
 
         // Handle send button click
-        // Handle send button click
         sendButton.setOnClickListener(v -> {
-            String messageContent = messageInput.getText().toString();
+            String messageContent = messageInput.getText().toString().trim();
             if (!messageContent.isEmpty()) {
-                // Create a Message object
-                Message userMessage = new Message(
-                        chatId,
-                        personaId,
-                        messageContent,
-                        Timestamp.now(),
-                        "sent"
-                );
-     //    public Message(String chatId, String senderId, String messageContent, Timestamp timestamp, String status) {
-
-                // Send message through ViewModel
-                chatViewModel.sendMessage(userMessage);
-
-                // Send message to GPT
-                chatViewModel.sendMessageToGPT(messageContent, new GPTRepository.ApiCallback() {
-                    @Override
-                    public void onSuccess(String gptResponse) {
-                        // Create GPT's response as a Message object
-                        Message gptMessage = new Message(
-                                chatId,
-                                FirebaseAuth.getInstance().getCurrentUser().getUid(),                   // Sender ID for GPT
-                                gptResponse,             // GPT's response content
-                                Timestamp.now(),         // Use Firebase Timestamp for consistency
-                                "received"               // Message status
-                        );
-
-                        // Save GPT's message through ViewModel
-                        chatViewModel.sendMessage(gptMessage);
-
-                        // Update RecyclerView with GPT's response
-                        runOnUiThread(() -> messageAdapter.addMessage(gptMessage));
-                    }
-
-                    @Override
-                    public void onFailure(String error) {
-                        Log.e(TAG, "GPT Error: " + error);
-                    }
-                });
-
-                // Clear the input field
-                messageInput.setText("");
+                sendMessage(messageContent);
             }
         });
     }
+
     private void observeMessages() {
-        chatViewModel.getMessagesForChat().observe(this, messages -> {
-
-            messageRecyclerView.setAdapter(messageAdapter);
-            Log.d("ChatActivity", "Messages size: " + messages.size());
-            //was crashing idk why
-
-            if (messages != null && !messages.isEmpty()) {
-                messageRecyclerView.smoothScrollToPosition(messages.size() - 1);
+        chatViewModel.observeMessages(chatId);
+        chatViewModel.getMessagesLiveData().observe(this, messages -> {
+            if (messages == null || messages.isEmpty()) {
+                Log.d(TAG, "UI observer: Messages size = 0");
+            } else {
+                Log.d(TAG, "UI observer: Displaying " + messages.size() + " messages.");
+                // Update UI here
             }
-
-
         });
     }
+
+
+
+
+    private void sendMessage(String messageContent) {
+        Log.d(TAG, "sendMessage called for userMessage: " + messageContent);
+
+        // Create a Message object
+        Message userMessage = new Message(
+                chatId,
+                personaId,
+                messageContent,
+                Timestamp.now(),
+                "sent"
+        );
+
+        // Send message through ViewModel
+        chatViewModel.sendMessage(userMessage);
+        Log.d(TAG, "sendMessage called for userMessage: " + userMessage.getMessageId());
+
+        // Send message to GPT
+        chatViewModel.sendMessageToGPT(messageContent, userMessage);
+
+        // Clear the input field
+        messageInput.setText("");
     }
+}
+
+//    private void observeMessages() {
+//        chatViewModel.getMessagesForChat().observe(this, messages -> {
+//            Log.d(TAG, "Observe triggered, Messages size = " + messages.size());
+//            for (Message message : messages) {
+//                if (!messageIds.contains(message.getMessageId())) {
+//                    messageAdapter.addMessage(message);
+//                    messageIds.add(message.getMessageId());
+//                    Log.d(TAG, "Adding message to adapter: " + message.getMessageId());
+//                }
+//            }
+//            // Summarization logic (unchanged)
+//            if (messages.size() % 10 == 0) {
+//                chatViewModel.requestSummarizationIfNeeded(chatId, this);
+//            }
+//        });
+//    }
+/**
+ *  FOR OBSERVEMESSAGES, BEFORE WE WERE RESETTING THE ADAPTER EVERYTHING.
+ *  TOO MUCH RESOURCES WERE BEING USED! INSTEAD OF :
+ *  1-  Too many visible glitches were happening
+ *  2 - Perfomance was being slow (Was triggering a full refresh every time)
+ *  3 - The typing animation was disappearing (because of the binding .. )
+ *  I found two different approaches:
+ *  _______________
+ *  notifyItemInserted(); --: triggers the adapter about the newly inserted item
+ *  or creating the setMessages on the Adapter; --: triggers the adapter about the data change
+ *  setMessages() --> triggers the adapter about the data change (full datachange)
+ * it leads to perfomance overhead, it agains forces the RV to refresh the whole list,
+ * causes scroll position loss, may disrupt the user's current scroll because of the entire thing
+ * is refreshed
+ *______________
+ *  However, the best approach is the notifyItemInserted() because it notifies the adapter
+ *  about a item-at-time, which is good for our case, since our app works with real-time data.
+ *
+ * ## ANOTHER BIG BUG -----  TOOK TOO MUCH TIME TO FIX :
+ * LiveData Over-Triggering: When a new message is added to Room or Firestore, it triggers
+ * observeMessages, which re-updates the adapter and re-adds messages.  It was causing multiple
+ * responses from the GPT, the same.
+ * @ToDo: Analyze, apparently it's passing the context manytimes; responseBody twice.
+ *
+ */
+

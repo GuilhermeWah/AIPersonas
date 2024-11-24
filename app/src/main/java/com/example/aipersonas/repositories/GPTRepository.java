@@ -1,6 +1,7 @@
 package com.example.aipersonas.repositories;
 
 import android.app.Application;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.lifecycle.LifecycleOwner;
@@ -16,9 +17,14 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Handler;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -39,6 +45,7 @@ public class GPTRepository {
     private final ChatDAO chatDAO;
 
 
+
     public GPTRepository(Application application) {
         this.client = new OkHttpClient();
         this.apiConfigRepository = new APIConfigRepository(application);
@@ -47,7 +54,10 @@ public class GPTRepository {
         this.executor = Executors.newSingleThreadExecutor();
         this.chatDAO = ChatDatabase.getInstance(application).chatDao();
 
+
     }
+
+
 
     // Define ApiCallback interface
     public interface ApiCallback {
@@ -175,15 +185,30 @@ public class GPTRepository {
         });
     }
 
-    // Method to request summarization if needed
+    /**Method to request summarization if needed (ask her in class)
+    // BUG 1:  Attempting to perform a database operation
+    // (getPersonaIdForChat) on the main thread. Android prevents such operations to avoid UI freezing.
+    // The reason for this happening is: getPersonaIdForChat in the chatDAO is being called synchronously
+    // --> (getPersonaIdForChat(chatId)) <--- inside the summarization function
+    //  Calling this synchronously locks  the main thread which leads to  IllegalStateException
+    // To fix this we gotta make sure  the getPersonaIdForChat is called asynchronously (on a background thread)
+    // We can use ExecutorService  to run the query on the bg and handle it in the mainthread;
+     // Or we can simply change the return  type on our DAO to LiveData<String>. Ended up going with the latter*/
+
     public void requestSummarizationIfNeeded(String chatId, LifecycleOwner lifecycleOwner) {
         LiveData<List<Message>> liveMessages = chatDAO.getMessagesForChat(chatId);
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        String personaId = chatDAO.getPersonaIdForChat(chatId);
+        LiveData<String> personaId = chatDAO.getPersonaIdForChat(chatId); // This line is causing the crash we gotta run on the bg thread
+        String personaIdValue = personaId.getValue(); // Extract String from LiveData
+        if (personaId == null || chatId == null) {
+            Log.e(TAG, "PersonaId or ChatId is null. Cannot generate Firestore path.");
+            return;
+        }
+
 
         // Observe the liveMessages with a lifecycleOwner
-        liveMessages.observe(lifecycleOwner, messages -> {
-            if (messages.size() % 10 == 0) {
+        liveMessages.observe(lifecycleOwner,  messages -> {
+            if (messages.size() % 10 == 0 && messages.size() >= 10) {
                 // Trigger summarization after every 10 messages
                 summarizeMessages(messages, new ApiCallback() {
                     @Override
@@ -202,7 +227,7 @@ public class GPTRepository {
 
                         // Also store the summary in Firestore
                         firebaseFirestore.collection("Users").document(currentUserId)
-                                .collection("Personas").document(personaId)
+                                .collection("Personas").document(personaIdValue)
                                 .collection("Chats").document(chatId)
                                 .update("chatSummary", summary, "lastSummaryTime", Timestamp.now())
                                 .addOnSuccessListener(aVoid -> Log.d(TAG, "Summary successfully updated in Firestore."))
@@ -217,6 +242,8 @@ public class GPTRepository {
             }
         });
     }
+
+
 
 
 

@@ -12,33 +12,27 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.aipersonas.R;
 import com.example.aipersonas.models.Message;
-import com.google.firebase.auth.FirebaseAuth;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int VIEW_TYPE_SENT = 1;
     private static final int VIEW_TYPE_RECEIVED = 2;
-    private static final int VIEW_TYPE_TYPING = 3;
 
     private List<Message> messageList;
-    private String currentUserId;
     private Context context;
 
     public MessageAdapter(Context context, List<Message> messageList) {
-        this.messageList = messageList;
         this.context = context;
-        this.currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        this.messageList = messageList != null ? messageList : new ArrayList<>();
     }
 
     @Override
     public int getItemViewType(int position) {
         Message message = messageList.get(position);
-
-        if (message.getStatus() != null && message.getStatus().equals("typing")) {
-            return VIEW_TYPE_TYPING;
-        } else if (message.getSenderId().equals(currentUserId)) {
+        if ("sent".equals(message.getStatus())) {
             return VIEW_TYPE_SENT;
         } else {
             return VIEW_TYPE_RECEIVED;
@@ -48,36 +42,28 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view;
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
         if (viewType == VIEW_TYPE_SENT) {
-            view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_sent, parent, false);
+            View view = inflater.inflate(R.layout.item_message_sent, parent, false);
             return new SentMessageViewHolder(view);
-        } else if (viewType == VIEW_TYPE_RECEIVED) {
-            view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_received, parent, false);
-            return new ReceivedMessageViewHolder(view);
         } else {
-            view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_typing, parent, false);
-            return new TypingMessageViewHolder(view);
+            View view = inflater.inflate(R.layout.item_message_received, parent, false);
+            return new ReceivedMessageViewHolder(view);
         }
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         Message message = messageList.get(position);
+        Log.d("MessageAdapter", "Binding message: " + message.getMessageContent());
+        if (holder instanceof SentMessageViewHolder) {
+            ((SentMessageViewHolder) holder).bind(message);
+            Log.d("MessageAdapter", "Binding Sent Message: " + message.getMessageContent());
 
-        switch (holder.getItemViewType()) {
-            case VIEW_TYPE_SENT:
-                ((SentMessageViewHolder) holder).bind(message);
-                break;
+        } else if (holder instanceof ReceivedMessageViewHolder) {
+            ((ReceivedMessageViewHolder) holder).bind(message);
+            Log.d("MessageAdapter", "Binding Received Message: " + message.getMessageContent());
 
-            case VIEW_TYPE_RECEIVED:
-                ((ReceivedMessageViewHolder) holder).bind(message);
-                break;
-
-            case VIEW_TYPE_TYPING:
-                // Handle typing indicator view
-                ((TypingMessageViewHolder) holder).bind();
-                break;
         }
     }
 
@@ -86,73 +72,43 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         return messageList.size();
     }
 
-    public void setMessages(List<Message> messages) {
-        this.messageList = messages;
-        notifyDataSetChanged();
+    // ** Add a New Message and Notify the Adapter **
+    // as I mentioned in the chatActivity, this is the best approach because it avoids the full
+    // refresh. This way we avoid unnecessary calls to setMessages() and notifyDataSetChanged()
+    public void addMessage(Message message) {
+        if (message != null) {
+            Log.d("MessageAdapter", "Adding message: " + message.getMessageContent());
+            messageList.add(message);
+            notifyItemInserted(messageList.size() - 1); // Notify RecyclerView of the new item
+        }
     }
 
-    // ViewHolder for sent messages
-    class SentMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView sentMessageTextView;
-        TextView timestampTextView;
+
+    // ViewHolder for Sent Messages
+    static class SentMessageViewHolder extends RecyclerView.ViewHolder {
+        TextView messageContent;
 
         SentMessageViewHolder(@NonNull View itemView) {
             super(itemView);
-            sentMessageTextView = itemView.findViewById(R.id.text_message_sent);
-            timestampTextView = itemView.findViewById(R.id.text_message_timestamp);
+            messageContent = itemView.findViewById(R.id.text_message_sent);
         }
 
         void bind(Message message) {
-            sentMessageTextView.setText(message.getMessageContent());
-            timestampTextView.setText(formatTimestamp(message.getTimestamp().toDate().getTime()));
+            messageContent.setText(message.getMessageContent());
         }
     }
 
-    // ViewHolder for received messages
-    class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView receivedMessageTextView;
-        TextView timestampTextView;
+    // ViewHolder for Received Messages
+    static class ReceivedMessageViewHolder extends RecyclerView.ViewHolder {
+        TextView messageContent;
 
         ReceivedMessageViewHolder(@NonNull View itemView) {
             super(itemView);
-            receivedMessageTextView = itemView.findViewById(R.id.text_message_received);
-            timestampTextView = itemView.findViewById(R.id.text_message_timestamp);
+            messageContent = itemView.findViewById(R.id.text_message_received);
         }
 
         void bind(Message message) {
-            receivedMessageTextView.setText(message.getMessageContent());
-            timestampTextView.setText(formatTimestamp(message.getTimestamp().toDate().getTime()));
-        }
-
-    }
-
-    // ViewHolder for typing indicator
-    class TypingMessageViewHolder extends RecyclerView.ViewHolder {
-        TextView typingIndicatorTextView;
-
-        TypingMessageViewHolder(@NonNull View itemView) {
-            super(itemView);
-            typingIndicatorTextView = itemView.findViewById(R.id.text_typing_indicator);
-        }
-
-        void bind() {
-            typingIndicatorTextView.setText(context.getString(R.string.typing));
+            messageContent.setText(message.getMessageContent());
         }
     }
-
-    // Helper method to format timestamp
-    private String formatTimestamp(long timestamp) {
-        // Your logic to format the timestamp
-        return String.valueOf(timestamp);
-    }
-
-    public void addMessage(Message message) {
-        if (messageList != null) {
-            messageList.add(message);
-            notifyItemInserted(messageList.size() - 1); // Notify the adapter about the newly inserted item
-        } else {
-            Log.e("MessageAdapter", "Message list is null. Cannot add message.");
-        }
-    }
-
 }
