@@ -297,6 +297,8 @@ public class ChatRepository {
     }
 
 
+    public String getgptDescriptionForChat(String personaId) {
+        return chatDAO.getgptDescriptionForPersona(personaId);
 
-
+    }
 }

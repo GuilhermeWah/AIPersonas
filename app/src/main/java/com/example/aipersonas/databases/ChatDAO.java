@@ -93,5 +93,9 @@ public interface ChatDAO {
     @Query("SELECT personaId FROM chat_table WHERE chatId = :chatId LIMIT 1")
     String getPersonaIdForChat(String chatId);
 
+    @Query("SELECT gptDescription FROM chat_table WHERE personaId = :personaId LIMIT 1")
+    String getgptDescriptionForPersona(String personaId);
+
+
 
 }

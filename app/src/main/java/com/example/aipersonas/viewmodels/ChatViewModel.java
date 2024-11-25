@@ -28,6 +28,7 @@ public class ChatViewModel extends AndroidViewModel {
     private final ExecutorService executor;
     private final String userId;
     private final String chatId;
+    private final String personaId;
 
     public ChatViewModel(@NonNull Application application, ChatRepository chatRepository, GPTRepository gptRepository, String personaId, String chatId) {
         super(application);
@@ -38,6 +39,7 @@ public class ChatViewModel extends AndroidViewModel {
         this.userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
         this.allChats = chatRepository.getAllChats();
         this.messagesForChat = chatRepository.getMessagesForChat(chatId);
+        this.personaId = personaId;
     }
 
     public LiveData<List<Message>> getMessagesForChat() {
@@ -48,11 +50,6 @@ public class ChatViewModel extends AndroidViewModel {
         return allChats;
     }
 
-    // Insert or update a chat through repository
-    public void saveChat(Chat chat) {
-        chatRepository.insertOrUpdateChat(chat);
-    }
-
     // Add a new message to the chat
     public void sendMessage(Message message) {
         chatRepository.addMessage(message);
@@ -60,8 +57,21 @@ public class ChatViewModel extends AndroidViewModel {
 
     // Send a message to GPT and handle the response
     public void sendMessageToGPT(String prompt, ApiCallback callback) {
-        gptRepository.sendGPTRequest(prompt, 100, 0.7f, callback);
+        executor.execute(() -> {
+            String personaContext = chatRepository.getgptDescriptionForChat(personaId);
+            if (personaContext != null) {
+
+                String combinedPrompt = "Persona Context: " + personaContext + "\nUser: " + prompt;
+
+                gptRepository.sendGPTRequest(combinedPrompt, 100, 0.7f, callback);
+            } else {
+                // Handle missing persona context
+                Log.e(TAG, "Persona context not found for personaId: " + personaId);
+            }
+        });
     }
+
+
 
     // Summarize messages if needed
     public void requestSummarizationIfNeeded() {

@@ -34,6 +34,8 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
     private Persona currentPersona;
     private FloatingActionButton addChatButton;
     private FirebaseAuth auth;
+    private String personaName;
+    private String personaId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,10 +45,24 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
         Toolbar toolbar = findViewById(R.id.chat_list_toolbar);
         setSupportActionBar(toolbar);
 
+        // Retrieve personaId, chatId, and personaName from intent
+
+        if (getIntent().hasExtra("personaId")) {
+            personaId = getIntent().getStringExtra("personaId");
+        }
+        if(getIntent().hasExtra("personaName")) {
+            String personaName = getIntent().getStringExtra("personaName");
+        }
+        // Set the title of the toolbar
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Persona Chats");
+            if (personaName != null) {
+                getSupportActionBar().setTitle(personaName);
+            } else {
+                getSupportActionBar().setTitle("Persona Chats");
+            }
         }
+
 
         auth = FirebaseAuth.getInstance();
         String userId = auth.getCurrentUser().getUid();
@@ -58,7 +74,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
         addChatButton = findViewById(R.id.add_chat_fab);
 
         // Get personaId from the intent
-        String personaId = null;
+        personaId = null;
 
         if (getIntent().hasExtra("personaId")) {
             personaId = getIntent().getStringExtra("personaId");
@@ -96,6 +112,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
                         userId,
                         currentPersona.getPersonaId(),
                         currentPersona.getName(),
+                        currentPersona.getGptDescription(),
                         "New Chat",                       // lastMessage
                         Timestamp.now(),                  // lastMessageTime (using current time)
                         true,                             // isActive (e.g., true to indicate active chat)
@@ -129,6 +146,7 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
         Intent intent = new Intent(this, ChatActivity.class);
         intent.putExtra("chatId", chat.getChatId()); // Pass the chatId to the ChatActivity
         intent.putExtra("personaId", chat.getPersonaId()); // Pass the personaId to the ChatActivity
+        intent.putExtra("personaName", chat.getPersonaName()); // Pass the personaName to the ChatActivity)
         startActivity(intent);
     }
 }

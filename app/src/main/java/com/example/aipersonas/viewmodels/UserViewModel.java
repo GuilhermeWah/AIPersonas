@@ -25,7 +25,14 @@ public class UserViewModel extends AndroidViewModel {
         userRepository.updateUser(user);
     }
 
-    public void deleteUser() {
-        userRepository.deleteUser();
+    /**
+     * Deletes the user from Firestore and local Room database.
+     * The deletion is carried out synchronously to ensure no inconsistency between cloud and local storage.
+     * Thats the reason we created the interface, just so we notify the caller.
+     * ====================@Todo: Lots of threads running, we have to figure it out.
+     * @param callback Just a callback to notify the outcome of the deletion operation (success or failure).
+     */
+    public void deleteUser(UserRepository.DeleteUserCallback callback) {
+        userRepository.deleteUser(callback);
     }
 }

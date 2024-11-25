@@ -105,24 +105,26 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
 
         bottomNavigationView.setOnNavigationItemSelectedListener(item -> {
             String title = item.getTitle().toString();
+
             switch (title) {
                 case "Settings":
-                    startActivity(new Intent(MainActivity.this, UserSettings.class));
-                    //Toast.makeText(this, "Profile Selected", Toast.LENGTH_SHORT).show();
+                    if (!isCurrentActivity(UserSettings.class)) {
+                        startActivity(new Intent(MainActivity.this, UserSettings.class));
+                    }
                     return true;
 
                 case "Home":
-                    startActivity(new Intent(MainActivity.this, ChatListActivity.class));
-                   // Toast.makeText(this, "Home Selected", Toast.LENGTH_SHORT).show();
+                    if (!isCurrentActivity(MainActivity.class)) {
+                        startActivity(new Intent(MainActivity.this, MainActivity.class));
+                    }
                     return true;
 
                 case "Create Chat":
                     showCreateChatDialog();
-
                     return true;
 
                 case "Search":
-                   // Toast.makeText(this, "Search Selected", Toast.LENGTH_SHORT).show();
+                    // Add search functionality here if needed
                     return true;
 
                 default:
@@ -130,17 +132,20 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
             }
         });
 
+
+
         // create new persona chat button
         createNewChatButton.setOnClickListener(v -> showCreateChatDialog());
 
-        // @TODO: search chat button
+        // @TODO: search chat button ## TO BE IMPLEMENTED ##
+        // UNFORTUNATELY WE RAN OUT OFF TIME.  BUGS AND BUGSS....
         searchChatButton.setOnClickListener(v -> {
             // Implement search functionality
             Toast.makeText(MainActivity.this, "Search Chat functionality coming soon...", Toast.LENGTH_SHORT).show();
         });
     }
 
-    //  show dialog for creating a new persona/chat
+    //  show dialog for creating a new persona/chat --> WE ARE KEEPING THE SAME LAYOUT FOR NOW
 // Updated showCreateChatDialog method
     private void showCreateChatDialog() {
         // Inflate the dialog layout
@@ -175,11 +180,6 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
                 .create()
                 .show();
     }
-
-
-
-
-
 
 
     private void deletePersona(Persona persona) {
@@ -244,6 +244,11 @@ public class MainActivity extends AppCompatActivity implements PersonaAdapter.On
         personas.add(new Persona( "Recipe Guru", "Suggests easy recipes for every occasion."));
         personas.add(new Persona( "History Enthusiast", "Explores major historical events and figures."));
         return personas;
+    }
+
+    // Helper method to check if the current activity is the same as the target activity
+    private boolean isCurrentActivity(Class<?> targetActivityClass) {
+        return this.getClass().equals(targetActivityClass);
     }
 
 

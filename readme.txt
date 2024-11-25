@@ -181,6 +181,51 @@ I just overloaded the constructor for preexisting Chat objects (e.g., syncing fr
 This way we can sync between both our dbs.
 
 
+@TODO: CHECK THIS SECURITY RULES, NOW USER CAN DELETE THEIR DOCUMENTS AND SUB COLLECTIONS
+AS LONG AS THEY OWN THE DATA request.auth.uid == userId
+BEFORE WE WERE HAVING PROBLEMS, THE SOLUTION WAS:
+allow read, write, delete: if request.auth != null && request.auth.uid == userId;
+
+In the previous rule, only read and write permissions were defined for each level
+(Users, Personas, Chats, and Messages). Apparently  Firestore security rules apply to both
+documents and their subcollections, failing to define delete permissions at every nested
+level resulted in insufficient permissions for deleting deeply nested data.
+@Before we had only specified the read and write permissions, it was lacking the explict delete
+permission. Because of THAT,  we were getting  PERMISSION_DENIED  PERMISSION_DENIED
+PERMISSION_DENIED  PERMISSION_DENIED PERMISSION_DENIED  ...
+
+Today, 24th November, our Firestore Structure is as following:
+
+Firestore Root
+└── Users (Collection)
+    └── {userId} (Document)
+        ├── firstName: String
+        ├── lastName: String
+        ├── email: String
+        ├── avatarUrl: String
+        └── Personas (Subcollection)
+            └── {personaId} (Document)
+                ├── name: String
+                ├── description: String
+                └── Chats (Subcollection)
+                    └── {chatId} (Document)
+                        ├── createdAt: Timestamp
+                        ├── status: String
+                        └── Messages (Subcollection)
+                            └── {messageId} (Document)
+                                ├── sender: String
+                                ├── content: String
+                                ├── timestamp: Timestamp
+
+└── sensitive_settings (Collection)
+    └── apiKeys (Document)
+        ├── gptApiKey: String
+
+
+
+
+
+
 ## Contributors
 - Guilherme Miranda (Developer & Project Lead)
 - Anastasia (Developer)

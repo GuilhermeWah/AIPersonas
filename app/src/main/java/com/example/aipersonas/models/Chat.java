@@ -25,6 +25,7 @@ public class Chat {
     private String status;
     private String lastUserMessage; // New field to track the last user message
     private int tokenCount; // New field to track token count for summarization
+    private String gptDescription;
 
 
     // No-arg constructor required by Room
@@ -34,11 +35,12 @@ public class Chat {
 
     // Parameterized constructor for other uses
     @Ignore
-    public Chat(String userId, String personaId, String name, String lastMessage, Timestamp lastMessageTime, boolean isActive, String status) {
+    public Chat(String userId, String personaId, String name, String gptDescription, String lastMessage, Timestamp lastMessageTime, boolean isActive, String status) {
         this.chatId = UUID.randomUUID().toString(); // Manually generate ID
         this.userId = userId;
         this.personaId = personaId;
         this.personaName = name;
+        this.gptDescription = gptDescription;
         this.lastMessage = lastMessage;
         this.lastMessageTime = lastMessageTime;
         this.isActive = isActive;
@@ -143,6 +145,14 @@ public class Chat {
 
     public void setTokenCount(int tokenCount) {
         this.tokenCount = tokenCount;
+    }
+
+    public String getGptDescription() {
+        return gptDescription;
+    }
+
+    public void setGptDescription(String gptDescription) {
+        this.gptDescription = gptDescription;
     }
 
     /**

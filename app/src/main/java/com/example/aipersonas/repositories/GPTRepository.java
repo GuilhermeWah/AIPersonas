@@ -206,7 +206,8 @@ public class GPTRepository {
 
     /**
      * Build a JSON request body for GPT tailored persona description refinement.
-     *
+     * @TODO: Need to finetune this!
+     *  ## ITS DRIVING ME CRAZY!!!!! #
      * @param description The persona description provided by the user
      * @param maxTokens The maximum number of tokens GPT can use
      * @param temperature Controls randomness in the response

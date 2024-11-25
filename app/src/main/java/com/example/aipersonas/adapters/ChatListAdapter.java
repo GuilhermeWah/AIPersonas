@@ -11,8 +11,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.aipersonas.R;
 import com.example.aipersonas.models.Chat;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatListViewHolder> {
 
@@ -38,8 +41,25 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatLi
     @Override
     public void onBindViewHolder(@NonNull ChatListViewHolder holder, int position) {
         Chat chat = chatList.get(position);
+
+        // Set the persona name and last message
         holder.personaTitleTextView.setText(chat.getPersonaName());
         holder.lastMessageTextView.setText(chat.getLastMessage());
+
+
+        // Format the timestamp and set it to the timestampTextView
+        // The toDate() method converts the Timestamp to a Date object
+        // That's a good idea (=
+        if (chat.getLastMessageTime() != null) {
+            long timestampInMillis = chat.getLastMessageTime().toDate().getTime();
+            String formattedTime = formatTimestamp(timestampInMillis);
+            holder.timestampTextView.setText(formattedTime);
+        } else {
+            holder.timestampTextView.setText("");  // Set an empty string if there's no timestamp
+        }
+
+
+        // Handle item click
         holder.itemView.setOnClickListener(v -> chatClickListener.onChatClick(chat));
     }
 
@@ -56,14 +76,22 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ChatLi
         }
     }
 
+    // Helper method to format timestamp
+    private String formatTimestamp(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm a", Locale.getDefault());
+        return sdf.format(new Date(timestamp));
+    }
+
     public static class ChatListViewHolder extends RecyclerView.ViewHolder {
         private TextView personaTitleTextView;
         private TextView lastMessageTextView;
+        private TextView timestampTextView;
 
         public ChatListViewHolder(@NonNull View itemView) {
             super(itemView);
             personaTitleTextView = itemView.findViewById(R.id.chatTitle);
             lastMessageTextView = itemView.findViewById(R.id.lastMessage);
+            timestampTextView = itemView.findViewById(R.id.timestamp);  // Find the new timestamp TextView
         }
     }
 }
