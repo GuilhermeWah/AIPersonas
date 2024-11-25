@@ -41,7 +41,7 @@ public class ChatListViewModel extends AndroidViewModel {
 
     // Chat CRUD operations
     public void insert(Chat chat) {
-        repository.insertChat(chat);
+        repository.insertOrUpdateChat(chat);
     }
 
     public void update(Chat chat) {

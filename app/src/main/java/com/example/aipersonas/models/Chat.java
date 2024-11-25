@@ -23,13 +23,14 @@ public class Chat {
     private Timestamp lastMessageTime;
     private boolean isActive;
     private String status;
+    private String lastUserMessage; // New field to track the last user message
+    private int tokenCount; // New field to track token count for summarization
+
 
     // No-arg constructor required by Room
     public Chat() {
         this.chatId = UUID.randomUUID().toString();
     }
-
-
 
     // Parameterized constructor for other uses
     @Ignore
@@ -42,8 +43,10 @@ public class Chat {
         this.lastMessageTime = lastMessageTime;
         this.isActive = isActive;
         this.status = status;
+        this.lastUserMessage = null; // Initialize lastUserMessage with the last message
+        this.tokenCount = 0; // Initialize tokenCount to 0
+        this.chatSummary = null; // Initialize chatSummary with the last message;
     }
-
 
     // Getters and Setters
     public String getChatId() {
@@ -126,4 +129,30 @@ public class Chat {
         this.lastSummaryTime = lastSummaryTime;
     }
 
+    public String getLastUserMessage() {
+        return lastUserMessage;
+    }
+
+    public void setLastUserMessage(String lastUserMessage) {
+        this.lastUserMessage = lastUserMessage;
+    }
+
+    public int getTokenCount() {
+        return tokenCount;
+    }
+
+    public void setTokenCount(int tokenCount) {
+        this.tokenCount = tokenCount;
+    }
+
+    /**
+     * Previous Approach:
+     * - We tracked only the last message and its timestamp without explicitly differentiating between user and system messages.
+     * - Summarization relied only on the message count without a direct way to track user-specific actions.
+     *
+     * Current Changes:
+     * - Added "lastUserMessage" to explicitly keep track of the last message sent by the user, helping manage user-specific context.
+     * - Added "tokenCount" to track the token usage for the chat, allowing for more efficient summarization logic based on token limits.
+     * - This change improves clarity in distinguishing user interactions from system-generated messages, making the summarization and context management more effective.
+     */
 }

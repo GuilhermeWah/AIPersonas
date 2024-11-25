@@ -80,7 +80,7 @@ public class ChatActivity extends AppCompatActivity {
         messageRecyclerView.setAdapter(messageAdapter);
 
         // Initialize ViewModel
-         ChatRepository chatRepository = new ChatRepository(ChatDatabase.getInstance(getApplication()).chatDao());
+        ChatRepository chatRepository = new ChatRepository(ChatDatabase.getInstance(getApplication()).chatDao());
         ChatViewModelFactory factory = new ChatViewModelFactory(getApplication(), chatRepository, personaId, chatId);
         ChatViewModel chatViewModel = new ViewModelProvider(this, factory).get(ChatViewModel.class);
         this.chatViewModel = chatViewModel;

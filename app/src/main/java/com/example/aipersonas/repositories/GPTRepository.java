@@ -15,7 +15,12 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -37,6 +42,7 @@ public class GPTRepository {
     private final FirebaseFirestore firebaseFirestore;
     private final Executor executor;
     private final ChatDAO chatDAO;
+    private final List<JSONObject> conversationHistory = new ArrayList<>();
 
 
     public GPTRepository(Application application) {
@@ -46,7 +52,6 @@ public class GPTRepository {
         this.firebaseFirestore = FirebaseFirestore.getInstance();
         this.executor = Executors.newSingleThreadExecutor();
         this.chatDAO = ChatDatabase.getInstance(application).chatDao();
-
     }
 
     // Define ApiCallback interface
@@ -70,39 +75,87 @@ public class GPTRepository {
     }
 
     // Function to handle GPT requests
-    public void sendGPTRequest(String prompt, int maxTokens, float temperature, ApiCallback callback) {
-
+    public void sendGPTRequest(String userMessage, int maxTokens, float temperature, ApiCallback callback) {
         if (gptKey == null) {
             Log.e(TAG, "GPT Key is null, cannot proceed.");
             callback.onFailure("Missing GPT API key");
             return;
         }
 
-        String requestBody = buildGPTRequestBody(prompt, maxTokens, temperature);
-        Request request = new Request.Builder()
-                .url("https://api.openai.com/v1/chat/completions")
-                .addHeader("Authorization", "Bearer " + gptKey)
-                .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
-                .build();
+        try {
+            // Add the user's message to the conversation history
+            JSONObject userMessageObject = new JSONObject();
+            userMessageObject.put("role", "user");
+            userMessageObject.put("content", userMessage);
+            conversationHistory.add(userMessageObject);
 
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                Log.e(TAG, "HTTP request failed: " + e.getMessage());
-                callback.onFailure(e.getMessage());
-            }
+            // Create the JSON array of messages
+            JSONArray messagesArray = new JSONArray(conversationHistory);
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful() && response.body() != null) {
-                    callback.onSuccess(response.body().string());
-                } else {
-                    String errorResponse = response.body() != null ? response.body().string() : "Unknown error";
-                    Log.e(TAG, "HTTP request failed with code: " + response.code() + ", response: " + errorResponse);
-                    callback.onFailure(errorResponse);
+            // Construct the JSON request body
+            JSONObject requestBodyJson = new JSONObject();
+            requestBodyJson.put("model", "gpt-3.5-turbo");
+            requestBodyJson.put("messages", messagesArray);
+            requestBodyJson.put("max_tokens", maxTokens);
+            requestBodyJson.put("temperature", temperature);
+
+            String requestBody = requestBodyJson.toString();
+            Request request = new Request.Builder()
+                    .url("https://api.openai.com/v1/chat/completions")
+                    .addHeader("Authorization", "Bearer " + gptKey)
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    Log.e(TAG, "HTTP request failed: " + e.getMessage());
+                    callback.onFailure(e.getMessage());
                 }
-            }
-        });
+
+                @Override
+                public void onResponse(Call call, Response response) throws IOException {
+                    if (response.isSuccessful() && response.body() != null) {
+                        try {
+                            JSONObject jsonResponse = new JSONObject(response.body().string());
+                            JSONArray choicesArray = jsonResponse.getJSONArray("choices");
+                            if (choicesArray.length() > 0) {
+                                JSONObject messageObject = choicesArray.getJSONObject(0).getJSONObject("message");
+                                String messageContent = messageObject.getString("content");
+
+                                // Clean up the response to make sure it's formatted properly
+                                messageContent = formatGPTResponse(messageContent);
+
+                                // Add the assistant's response to the conversation history
+                                JSONObject assistantMessageObject = new JSONObject();
+                                assistantMessageObject.put("role", "assistant");
+                                assistantMessageObject.put("content", messageContent);
+                                conversationHistory.add(assistantMessageObject);
+
+                                // Pass the properly formatted content to the callback
+                                callback.onSuccess(messageContent);
+                            } else {
+                                callback.onFailure("No valid response from GPT");
+                            }
+                        } catch (JSONException e) {
+                            callback.onFailure("Error parsing GPT response: " + e.getMessage());
+                        }
+                    } else {
+                        String errorResponse = response.body() != null ? response.body().string() : "Unknown error";
+                        Log.e(TAG, "HTTP request failed with code: " + response.code() + ", response: " + errorResponse);
+                        callback.onFailure(errorResponse);
+                    }
+                }
+            });
+        } catch (JSONException e) {
+            callback.onFailure("Error constructing GPT request: " + e.getMessage());
+        }
+    }
+
+    // Helper method to format the GPT response properly
+    private String formatGPTResponse(String response) {
+        // Remove unnecessary information or formatting from the response
+        return response.trim();
     }
 
     //@TODO: Documenting this function
@@ -165,7 +218,19 @@ public class GPTRepository {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful() && response.body() != null) {
-                    callback.onSuccess(response.body().string());
+                    try {
+                        JSONObject jsonResponse = new JSONObject(response.body().string());
+                        JSONArray choicesArray = jsonResponse.getJSONArray("choices");
+                        if (choicesArray.length() > 0) {
+                            JSONObject messageObject = choicesArray.getJSONObject(0).getJSONObject("message");
+                            String summaryContent = messageObject.getString("content");
+                            callback.onSuccess(summaryContent.trim());
+                        } else {
+                            callback.onFailure("No valid response from GPT");
+                        }
+                    } catch (JSONException e) {
+                        callback.onFailure("Error parsing GPT response: " + e.getMessage());
+                    }
                 } else {
                     String errorResponse = response.body() != null ? response.body().string() : "Unknown error";
                     Log.e(TAG, "HTTP request failed with code: " + response.code() + ", response: " + errorResponse);
@@ -176,6 +241,24 @@ public class GPTRepository {
     }
 
     // Method to request summarization if needed
+    /**
+     * Method to request summarization if certain conditions are met.
+     *
+     * This method observes the list of messages associated with a given chat ID and determines
+     * if summarization is necessary based on the following conditions:
+     * 1. **Message Count-Based Trigger**: Summarization occurs when the number of messages in the chat
+     *    reaches a multiple of 10. This helps to manage context as conversations grow.
+     * 2. **Inactivity-Based Trigger**: If the chat has been inactive for a specific duration (e.g., 10 minutes),
+     *    a summary is generated to ensure that context is preserved in case of long pauses.
+     *
+     * The summarization result is saved in both the Room database and Firestore to maintain synchronization
+     * between local and remote storage. The approach aims to avoid overwhelming Firestore with frequent updates
+     * by limiting summarization to only when these conditions are met.
+     *
+     * Parameters:
+     * - `chatId` (String): The ID of the chat for which summarization is being requested.
+     * - `lifecycleOwner` (LifecycleOwner): Used to observe LiveData and ensure lifecycle-aware operations.
+     */
     public void requestSummarizationIfNeeded(String chatId, LifecycleOwner lifecycleOwner) {
         LiveData<List<Message>> liveMessages = chatDAO.getMessagesForChat(chatId);
         String currentUserId = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -183,8 +266,12 @@ public class GPTRepository {
 
         // Observe the liveMessages with a lifecycleOwner
         liveMessages.observe(lifecycleOwner, messages -> {
-            if (messages.size() % 10 == 0) {
-                // Trigger summarization after every 10 messages
+            // Check conditions for summarization
+            boolean shouldSummarizeByMessageCount = messages.size() % 10 == 0 && messages.size() != 0;
+            boolean shouldSummarizeByInactivity = shouldSummarizeDueToInactivity(chatId);
+
+            if (shouldSummarizeByMessageCount || shouldSummarizeByInactivity) {
+                // Trigger summarization
                 summarizeMessages(messages, new ApiCallback() {
                     @Override
                     public void onSuccess(String summary) {
@@ -197,16 +284,16 @@ public class GPTRepository {
                                 chat.setChatSummary(summary);
                                 chat.setLastSummaryTime(Timestamp.now());
                                 chatDAO.updateChat(chat);
+
+                                // Update Firestore with the summary details
+                                firebaseFirestore.collection("Users").document(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                                        .collection("Personas").document(personaId)
+                                        .collection("Chats").document(chatId)
+                                        .update("chatSummary", summary, "lastSummaryTime", Timestamp.now())
+                                        .addOnSuccessListener(aVoid -> Log.d(TAG, "Summary successfully updated in Firestore."))
+                                        .addOnFailureListener(e -> Log.e(TAG, "Error updating summary in Firestore", e));
                             }
                         });
-
-                        // Also store the summary in Firestore
-                        firebaseFirestore.collection("Users").document(currentUserId)
-                                .collection("Personas").document(personaId)
-                                .collection("Chats").document(chatId)
-                                .update("chatSummary", summary, "lastSummaryTime", Timestamp.now())
-                                .addOnSuccessListener(aVoid -> Log.d(TAG, "Summary successfully updated in Firestore."))
-                                .addOnFailureListener(e -> Log.e(TAG, "Error updating summary in Firestore", e));
                     }
 
                     @Override
@@ -218,8 +305,20 @@ public class GPTRepository {
         });
     }
 
+    // Helper method to determine if summarization should be triggered due to inactivity
+    private boolean shouldSummarizeDueToInactivity(String chatId) {
+        // Fetch the chat from Room
+        Chat chat = chatDAO.getChatByIdSync(chatId);
 
+        if (chat != null && chat.getLastSummaryTime() != null) {
+            long currentTime = Timestamp.now().toDate().getTime();
+            long lastSummaryTime = chat.getLastSummaryTime().toDate().getTime();
+            long inactivityDuration = currentTime - lastSummaryTime;
 
-
+            // Check if there has been more than 10 minutes of inactivity (600,000 ms)
+            return inactivityDuration > 600000;
+        }
+        return false;
+    }
 
 }

@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 import com.example.aipersonas.databases.ChatDAO;
 import com.example.aipersonas.models.Chat;
 import com.example.aipersonas.models.Message;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
@@ -54,16 +55,34 @@ public class ChatRepository {
                 .document(chatId);
     }
 
+
     // Insert or update a chat in both Firestore and Room
-    public void insertOrUpdateChat(Chat chat) {
+    public void insertOrUpdateChat(@NonNull Chat chat) {
+        if (chat.getUserId() == null || chat.getPersonaId() == null || chat.getChatId() == null) {
+            Log.e(TAG, "Invalid IDs: userId=" + chat.getUserId() + ", personaId=" + chat.getPersonaId() + ", chatId=" + chat.getChatId());
+            return;
+        }
+
         executor.execute(() -> {
+            // Insert chat into Room database using DAO
             chatDAO.insertChat(chat);
-            getChatDocumentRef(chat.getPersonaId(), chat.getChatId())
-                    .set(chat)
+
+            // Insert or update the chat in Firestore
+            usersCollection
+                    .document(chat.getUserId())
+                    .collection("Personas")
+                    .document(chat.getPersonaId())
+                    .collection("Chats")
+                    .document(chat.getChatId())
+                    .set(chat)  // This stores the entire Chat object in Firestore
                     .addOnSuccessListener(aVoid -> Log.d(TAG, "Chat added/updated successfully in Firestore"))
                     .addOnFailureListener(e -> Log.e(TAG, "Error adding/updating chat in Firestore", e));
         });
     }
+
+
+
+
 
     // Delete a chat from both Firestore and Room
     public void deleteChat(Chat chat) {
@@ -145,7 +164,10 @@ public class ChatRepository {
         }
 
         executor.execute(() -> {
+            // Insert the message into Room
             chatDAO.insertMessage(message);
+
+            // Insert the message into Firestore
             usersCollection
                     .document(userId)
                     .collection("Personas")
@@ -155,10 +177,35 @@ public class ChatRepository {
                     .collection("Messages")
                     .document(message.getMessageId())
                     .set(message)
-                    .addOnSuccessListener(aVoid -> Log.d(TAG, "Message added successfully to Firestore"))
+                    .addOnSuccessListener(aVoid -> {
+                        Log.d(TAG, "Message added successfully to Firestore");
+
+                        // After successfully adding the message, update the chat's last message info
+                        updateChatWithLastMessage(message);
+                    })
                     .addOnFailureListener(e -> Log.e(TAG, "Error adding message to Firestore", e));
         });
     }
+
+
+    private void updateChatWithLastMessage(@NonNull Message message) {
+        executor.execute(() -> {
+            // Get the chat from Room and update it
+            Chat chat = chatDAO.getChatByIdSync(message.getChatId());
+            if (chat != null) {
+                chat.setLastMessage(message.getMessageContent());
+                chat.setLastMessageTime(message.getTimestamp());
+                chatDAO.updateChat(chat);
+
+                // Update the chat in Firestore
+                getChatDocumentRef(chat.getPersonaId(), chat.getChatId())
+                        .update("lastMessage", message.getMessageContent(), "lastMessageTime", message.getTimestamp())
+                        .addOnSuccessListener(aVoid -> Log.d(TAG, "Chat updated with last message successfully in Firestore"))
+                        .addOnFailureListener(e -> Log.e(TAG, "Error updating chat with last message in Firestore", e));
+            }
+        });
+    }
+
 
     // Listen to messages in real-time from Firestore
     public void listenToMessages(String personaId, String chatId) {
@@ -248,4 +295,8 @@ public class ChatRepository {
             chatDAO.insertChat(chat);
         });
     }
+
+
+
+
 }

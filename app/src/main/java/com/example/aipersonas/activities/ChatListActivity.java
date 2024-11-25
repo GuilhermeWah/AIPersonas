@@ -97,20 +97,21 @@ public class ChatListActivity extends AppCompatActivity implements ChatListAdapt
                         currentPersona.getPersonaId(),
                         currentPersona.getName(),
                         "New Chat",                       // lastMessage
-                        Timestamp.now(), // lastMessageTime (using current time)
+                        Timestamp.now(),                  // lastMessageTime (using current time)
                         true,                             // isActive (e.g., true to indicate active chat)
                         "active"                          // status (e.g., "active" or some other appropriate status)
                 );
                 chatListViewModel.insert(newChat);
-
-                Toast.makeText(ChatListActivity.this, "Chat created successfully", Toast.LENGTH_SHORT).show();
+                Log.d("ChatListActivity", "New chat inserted in ROOM " + newChat.getChatId());
+                Toast.makeText(ChatListActivity.this, "Chat CREATED successfully", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(ChatListActivity.this, "Persona not found", Toast.LENGTH_SHORT).show();
+                Log.e("ChatListActivity", "Current persona is null");
             }
         });
     }
 
-    @Override
+        @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // verify if the user clicked the back button
         if (item.getItemId() == android.R.id.home) {
