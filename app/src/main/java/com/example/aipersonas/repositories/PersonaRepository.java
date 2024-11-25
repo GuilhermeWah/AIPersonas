@@ -171,7 +171,7 @@ private void fetchPersonasFromFirestore() {
                 Log.e(TAG, "Failed to tailor persona description: " + error);
                 callback.onFailure(error);
             }
-        });
+        },true);
     }
 
 

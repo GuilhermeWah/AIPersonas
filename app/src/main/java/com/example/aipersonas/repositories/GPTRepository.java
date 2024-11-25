@@ -10,7 +10,6 @@ import com.example.aipersonas.databases.ChatDAO;
 import com.example.aipersonas.databases.ChatDatabase;
 import com.example.aipersonas.models.Chat;
 import com.example.aipersonas.models.Message;
-import com.example.aipersonas.utils.SummaryUtils;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -44,7 +43,7 @@ public class GPTRepository {
     private final ChatDAO chatDAO;
     private final List<JSONObject> conversationHistory = new ArrayList<>();
 
-
+    // Constructor to initialize essential components
     public GPTRepository(Application application) {
         this.client = new OkHttpClient();
         this.apiConfigRepository = new APIConfigRepository(application);
@@ -54,12 +53,13 @@ public class GPTRepository {
         this.chatDAO = ChatDatabase.getInstance(application).chatDao();
     }
 
-    // Define ApiCallback interface
+    // Interface to handle API responses
     public interface ApiCallback {
         void onSuccess(String response);
         void onFailure(String error);
     }
 
+    // Fetch the GPT API Key from the configuration repository
     private String fetchGPTKey() {
         String apiKey = apiConfigRepository.getGPTKey();
         if (apiKey != null) {
@@ -70,11 +70,21 @@ public class GPTRepository {
         }
     }
 
+    // Getter for GPT key
     public String getGptKey() {
         return gptKey;
     }
 
-    // Function to handle GPT requests
+    /**
+     * Send a request to GPT with a user-provided message.
+     * -- THE PROJECT GOT BIG, AND I DECIDED TO OVERLOAD THIS METHOD, SO THAT
+     * -- WE DON'T HAVE TO CHANGE OUR ARCHITECTURE DESIGN. ANYWAYS, PERSONAREP ALSO USES THIS METHOD
+     * -- SO IN ORDER TO FIX IT, I SET A FLAG IN THE OVERLOADED METHOD, JUST SO WE KNOW WHO TRIGGERED IT
+     * @param userMessage The message input by the user
+     * @param maxTokens The maximum number of tokens GPT can use
+     * @param temperature Controls randomness in the response
+     * @param callback Callback to handle the response or failure
+     */
     public void sendGPTRequest(String userMessage, int maxTokens, float temperature, ApiCallback callback) {
         if (gptKey == null) {
             Log.e(TAG, "GPT Key is null, cannot proceed.");
@@ -106,6 +116,7 @@ public class GPTRepository {
                     .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
                     .build();
 
+            // Make the request using OkHttp
             client.newCall(request).enqueue(new Callback() {
                 @Override
                 public void onFailure(Call call, IOException e) {
@@ -122,9 +133,6 @@ public class GPTRepository {
                             if (choicesArray.length() > 0) {
                                 JSONObject messageObject = choicesArray.getJSONObject(0).getJSONObject("message");
                                 String messageContent = messageObject.getString("content");
-
-                                // Clean up the response to make sure it's formatted properly
-                                messageContent = formatGPTResponse(messageContent);
 
                                 // Add the assistant's response to the conversation history
                                 JSONObject assistantMessageObject = new JSONObject();
@@ -152,13 +160,58 @@ public class GPTRepository {
         }
     }
 
-    // Helper method to format the GPT response properly
-    private String formatGPTResponse(String response) {
-        // Remove unnecessary information or formatting from the response
-        return response.trim();
+    /**
+     * Overloaded version of sendGPTRequest for PersonaRepository.
+     * This version does not use conversation history and is used to tailor persona descriptions.
+     *
+     * @param prompt The prompt to be sent to GPT
+     * @param maxTokens The maximum number of tokens GPT can use
+     * @param temperature Controls randomness in the response
+     * @param callback Callback to handle the response or failure
+     */
+    public void sendGPTRequest(String prompt, int maxTokens, float temperature, ApiCallback callback, boolean isInitialPersonaRequest) {
+        if (gptKey == null) {
+            Log.e(TAG, "GPT Key is null, cannot proceed.");
+            callback.onFailure("Missing GPT API key");
+            return;
+        }
+
+        String requestBody = buildGPTRequestBody(prompt, maxTokens, temperature);
+        Request request = new Request.Builder()
+                .url("https://api.openai.com/v1/chat/completions")
+                .addHeader("Authorization", "Bearer " + gptKey)
+                .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                .build();
+
+        // Make the request using OkHttp
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e(TAG, "HTTP request failed: " + e.getMessage());
+                callback.onFailure(e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful() && response.body() != null) {
+                    callback.onSuccess(response.body().string());
+                } else {
+                    String errorResponse = response.body() != null ? response.body().string() : "Unknown error";
+                    Log.e(TAG, "HTTP request failed with code: " + response.code() + ", response: " + errorResponse);
+                    callback.onFailure(errorResponse);
+                }
+            }
+        });
     }
 
-    //@TODO: Documenting this function
+    /**
+     * Build a JSON request body for GPT tailored persona description refinement.
+     *
+     * @param description The persona description provided by the user
+     * @param maxTokens The maximum number of tokens GPT can use
+     * @param temperature Controls randomness in the response
+     * @return The JSON request body as a string
+     */
     public String buildGPTRequestBody(String description, int maxTokens, float temperature) {
         String instruction = "You are tasked with refining the persona description provided for internal use only. "
                 + "This refined description is intended to optimize GPT's understanding and simulation of the persona during user interactions. "
@@ -179,7 +232,12 @@ public class GPTRepository {
                 + "}";
     }
 
-    // Method to summarize messages
+    /**
+     * Summarize a list of messages.
+     *
+     * @param messages The list of messages to summarize
+     * @param callback The callback to handle success or failure of the request
+     */
     public void summarizeMessages(List<Message> messages, ApiCallback callback) {
         if (gptKey == null) {
             Log.e(TAG, "GPT Key is null, cannot proceed.");
@@ -218,19 +276,7 @@ public class GPTRepository {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if (response.isSuccessful() && response.body() != null) {
-                    try {
-                        JSONObject jsonResponse = new JSONObject(response.body().string());
-                        JSONArray choicesArray = jsonResponse.getJSONArray("choices");
-                        if (choicesArray.length() > 0) {
-                            JSONObject messageObject = choicesArray.getJSONObject(0).getJSONObject("message");
-                            String summaryContent = messageObject.getString("content");
-                            callback.onSuccess(summaryContent.trim());
-                        } else {
-                            callback.onFailure("No valid response from GPT");
-                        }
-                    } catch (JSONException e) {
-                        callback.onFailure("Error parsing GPT response: " + e.getMessage());
-                    }
+                    callback.onSuccess(response.body().string());
                 } else {
                     String errorResponse = response.body() != null ? response.body().string() : "Unknown error";
                     Log.e(TAG, "HTTP request failed with code: " + response.code() + ", response: " + errorResponse);
@@ -240,24 +286,11 @@ public class GPTRepository {
         });
     }
 
-    // Method to request summarization if needed
     /**
-     * Method to request summarization if certain conditions are met.
+     * Request summarization if certain conditions are met.
      *
-     * This method observes the list of messages associated with a given chat ID and determines
-     * if summarization is necessary based on the following conditions:
-     * 1. **Message Count-Based Trigger**: Summarization occurs when the number of messages in the chat
-     *    reaches a multiple of 10. This helps to manage context as conversations grow.
-     * 2. **Inactivity-Based Trigger**: If the chat has been inactive for a specific duration (e.g., 10 minutes),
-     *    a summary is generated to ensure that context is preserved in case of long pauses.
-     *
-     * The summarization result is saved in both the Room database and Firestore to maintain synchronization
-     * between local and remote storage. The approach aims to avoid overwhelming Firestore with frequent updates
-     * by limiting summarization to only when these conditions are met.
-     *
-     * Parameters:
-     * - `chatId` (String): The ID of the chat for which summarization is being requested.
-     * - `lifecycleOwner` (LifecycleOwner): Used to observe LiveData and ensure lifecycle-aware operations.
+     * @param chatId The ID of the chat for which summarization is being requested
+     * @param lifecycleOwner Used to observe LiveData and ensure lifecycle-aware operations
      */
     public void requestSummarizationIfNeeded(String chatId, LifecycleOwner lifecycleOwner) {
         LiveData<List<Message>> liveMessages = chatDAO.getMessagesForChat(chatId);
@@ -286,7 +319,7 @@ public class GPTRepository {
                                 chatDAO.updateChat(chat);
 
                                 // Update Firestore with the summary details
-                                firebaseFirestore.collection("Users").document(FirebaseAuth.getInstance().getCurrentUser().getUid())
+                                firebaseFirestore.collection("Users").document(currentUserId)
                                         .collection("Personas").document(personaId)
                                         .collection("Chats").document(chatId)
                                         .update("chatSummary", summary, "lastSummaryTime", Timestamp.now())
@@ -307,7 +340,6 @@ public class GPTRepository {
 
     // Helper method to determine if summarization should be triggered due to inactivity
     private boolean shouldSummarizeDueToInactivity(String chatId) {
-        // Fetch the chat from Room
         Chat chat = chatDAO.getChatByIdSync(chatId);
 
         if (chat != null && chat.getLastSummaryTime() != null) {
@@ -320,5 +352,4 @@ public class GPTRepository {
         }
         return false;
     }
-
 }
